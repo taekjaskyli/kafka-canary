@@ -184,7 +184,7 @@ Prometheus namespace is `kafka_canary`.
 | `connection_total` | Connection attempts (success or failure) |
 | `connection_latency` | Connection latency (ms) |
 
-Example Grafana dashboard: [`deploy/examples/metrics/grafana-dashboards/kafka-canary.json`](./deploy/examples/metrics/grafana-dashboards/kafka-canary.json).
+Example Grafana dashboard: [`deploy/examples/metrics/grafana-dashboards/kafka-canary.json`](./deploy/examples/metrics/grafana-dashboards/kafka-canary.json). Grafana 12 JSON; import and pick a Prometheus-compatible datasource. Queries use `kafka_canary_*` and `clientid="kafka-canary-client"`.
 
 With Prometheus Operator, enable the chart's ServiceMonitor (`serviceMonitor.enabled=true`) instead of applying a separate manifest.
 

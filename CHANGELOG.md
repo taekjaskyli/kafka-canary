@@ -14,6 +14,7 @@ Notes for the next tag. Rewrite this heading to `## 0.9.0` (or whatever the vers
 
 ### Changed
 
+* Example Grafana dashboard is Grafana 12 JSON with error and connection panels (`kafka_canary_*`)
 * Empty `EXPECTED_CLUSTER_SIZE` is unset (`-1`), not `0`
 * `TOPIC_CONFIG` at startup no longer fails on Kafka 4
 * Go 1.22.2 → 1.26.8
