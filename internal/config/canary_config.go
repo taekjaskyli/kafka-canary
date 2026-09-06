@@ -19,41 +19,51 @@ import (
 
 const (
 	// environment variables declaration
-	BootstrapServersEnvVar              = "KAFKA_BOOTSTRAP_SERVERS"
-	BootstrapBackoffMaxAttemptsEnvVar   = "KAFKA_BOOTSTRAP_BACKOFF_MAX_ATTEMPTS"
-	BootstrapBackoffScaleEnvVar         = "KAFKA_BOOTSTRAP_BACKOFF_SCALE"
-	TopicEnvVar                         = "TOPIC"
-	TopicConfigEnvVar                   = "TOPIC_CONFIG"
-	ReconcileIntervalEnvVar             = "RECONCILE_INTERVAL_MS"
-	ClientIDEnvVar                      = "CLIENT_ID"
-	ConsumerGroupIDEnvVar               = "CONSUMER_GROUP_ID"
-	ProducerLatencyBucketsEnvVar        = "PRODUCER_LATENCY_BUCKETS"
-	EndToEndLatencyBucketsEnvVar        = "ENDTOEND_LATENCY_BUCKETS"
-	ExpectedClusterSizeEnvVar           = "EXPECTED_CLUSTER_SIZE"
-	KafkaVersionEnvVar                  = "KAFKA_VERSION"
-	SaramaLogEnabledEnvVar              = "SARAMA_LOG_ENABLED"
-	VerbosityLogLevelEnvVar             = "VERBOSITY_LOG_LEVEL"
-	TLSEnabledEnvVar                    = "TLS_ENABLED"
-	TLSCACertEnvVar                     = "TLS_CA_CERT"
-	TLSClientCertEnvVar                 = "TLS_CLIENT_CERT"
-	TLSClientKeyEnvVar                  = "TLS_CLIENT_KEY"
-	TLSInsecureSkipVerifyEnvVar         = "TLS_INSECURE_SKIP_VERIFY"
-	SASLMechanismEnvVar                 = "SASL_MECHANISM"
-	SASLUserEnvVar                      = "SASL_USER"
-	SASLPasswordEnvVar                  = "SASL_PASSWORD"
-	SASLOAuthTokenURLEnvVar             = "SASL_OAUTH_TOKEN_URL"
-	SASLOAuthClientIDEnvVar             = "SASL_OAUTH_CLIENT_ID"
-	SASLOAuthClientSecretEnvVar         = "SASL_OAUTH_CLIENT_SECRET"
-	SASLOAuthScopeEnvVar                = "SASL_OAUTH_SCOPE"
-	ConnectionCheckIntervalEnvVar       = "CONNECTION_CHECK_INTERVAL_MS"
-	ConnectionCheckLatencyBucketsEnvVar = "CONNECTION_CHECK_LATENCY_BUCKETS"
-	StatusCheckIntervalEnvVar           = "STATUS_CHECK_INTERVAL_MS"
-	StatusTimeWindowEnvVar              = "STATUS_TIME_WINDOW_MS"
-	DynamicConfigFileEnvVar             = "DYNAMIC_CONFIG_FILE"
-	DynamicConfigWatcherIntervalEnvVar  = "DYNAMIC_CONFIG_WATCHER_INTERVAL"
-	TracingEnabledEnvVar                = "TRACING_ENABLED"
-	MessageSizeEnvVar                   = "MESSAGE_SIZE"
-	PrometheusConsantLabelsEnvVar       = "PROMETHEUS_CONSTANT_LABELS"
+	BootstrapServersEnvVar                  = "KAFKA_BOOTSTRAP_SERVERS"
+	BootstrapBackoffMaxAttemptsEnvVar       = "KAFKA_BOOTSTRAP_BACKOFF_MAX_ATTEMPTS"
+	BootstrapBackoffScaleEnvVar             = "KAFKA_BOOTSTRAP_BACKOFF_SCALE"
+	TopicEnvVar                             = "TOPIC"
+	TopicConfigEnvVar                       = "TOPIC_CONFIG"
+	ReconcileIntervalEnvVar                 = "RECONCILE_INTERVAL_MS"
+	ClientIDEnvVar                          = "CLIENT_ID"
+	ConsumerGroupIDEnvVar                   = "CONSUMER_GROUP_ID"
+	ProducerLatencyBucketsEnvVar            = "PRODUCER_LATENCY_BUCKETS"
+	EndToEndLatencyBucketsEnvVar            = "ENDTOEND_LATENCY_BUCKETS"
+	ExpectedClusterSizeEnvVar               = "EXPECTED_CLUSTER_SIZE"
+	KafkaVersionEnvVar                      = "KAFKA_VERSION"
+	SaramaLogEnabledEnvVar                  = "SARAMA_LOG_ENABLED"
+	SaramaProducerRetryMaxEnvVar            = "SARAMA_PRODUCER_RETRY_MAX"
+	SaramaProducerRetryBackoffMsEnvVar      = "SARAMA_PRODUCER_RETRY_BACKOFF_MS"
+	SaramaNetDialTimeoutMsEnvVar            = "SARAMA_NET_DIAL_TIMEOUT_MS"
+	SaramaNetReadTimeoutMsEnvVar            = "SARAMA_NET_READ_TIMEOUT_MS"
+	SaramaNetWriteTimeoutMsEnvVar           = "SARAMA_NET_WRITE_TIMEOUT_MS"
+	SaramaNetKeepAliveMsEnvVar              = "SARAMA_NET_KEEP_ALIVE_MS"
+	SaramaConsumerSessionTimeoutMsEnvVar    = "SARAMA_CONSUMER_SESSION_TIMEOUT_MS"
+	SaramaConsumerHeartbeatIntervalMsEnvVar = "SARAMA_CONSUMER_HEARTBEAT_INTERVAL_MS"
+	SaramaMetadataRefreshFrequencyMsEnvVar  = "SARAMA_METADATA_REFRESH_FREQUENCY_MS"
+	SaramaAdminTimeoutMsEnvVar              = "SARAMA_ADMIN_TIMEOUT_MS"
+	VerbosityLogLevelEnvVar                 = "VERBOSITY_LOG_LEVEL"
+	TLSEnabledEnvVar                        = "TLS_ENABLED"
+	TLSCACertEnvVar                         = "TLS_CA_CERT"
+	TLSClientCertEnvVar                     = "TLS_CLIENT_CERT"
+	TLSClientKeyEnvVar                      = "TLS_CLIENT_KEY"
+	TLSInsecureSkipVerifyEnvVar             = "TLS_INSECURE_SKIP_VERIFY"
+	SASLMechanismEnvVar                     = "SASL_MECHANISM"
+	SASLUserEnvVar                          = "SASL_USER"
+	SASLPasswordEnvVar                      = "SASL_PASSWORD"
+	SASLOAuthTokenURLEnvVar                 = "SASL_OAUTH_TOKEN_URL"
+	SASLOAuthClientIDEnvVar                 = "SASL_OAUTH_CLIENT_ID"
+	SASLOAuthClientSecretEnvVar             = "SASL_OAUTH_CLIENT_SECRET"
+	SASLOAuthScopeEnvVar                    = "SASL_OAUTH_SCOPE"
+	ConnectionCheckIntervalEnvVar           = "CONNECTION_CHECK_INTERVAL_MS"
+	ConnectionCheckLatencyBucketsEnvVar     = "CONNECTION_CHECK_LATENCY_BUCKETS"
+	StatusCheckIntervalEnvVar               = "STATUS_CHECK_INTERVAL_MS"
+	StatusTimeWindowEnvVar                  = "STATUS_TIME_WINDOW_MS"
+	DynamicConfigFileEnvVar                 = "DYNAMIC_CONFIG_FILE"
+	DynamicConfigWatcherIntervalEnvVar      = "DYNAMIC_CONFIG_WATCHER_INTERVAL"
+	TracingEnabledEnvVar                    = "TRACING_ENABLED"
+	MessageSizeEnvVar                       = "MESSAGE_SIZE"
+	PrometheusConsantLabelsEnvVar           = "PROMETHEUS_CONSTANT_LABELS"
 	// default values for environment variables
 	BootstrapServersDefault              = "localhost:9092"
 	BootstrapBackoffMaxAttemptsDefault   = 10
@@ -68,7 +78,9 @@ const (
 	ExpectedClusterSizeDefault           = -1 // "dynamic" reassignment is enabled
 	KafkaVersionDefault                  = "3.2.0"
 	SaramaLogEnabledDefault              = false
-	VerbosityLogLevelDefault             = 0 // default 0 = INFO, 1 = DEBUG, 2 = TRACE
+	SaramaProducerRetryMaxDefault        = 0
+	SaramaUnsetMsDefault                 = -1 // env absent: keep Sarama library default
+	VerbosityLogLevelDefault             = 0  // default 0 = INFO, 1 = DEBUG, 2 = TRACE
 	TLSEnabledDefault                    = false
 	TLSCACertDefault                     = ""
 	TLSClientCertDefault                 = ""
@@ -100,39 +112,49 @@ type DynamicCanaryConfig struct {
 // CanaryConfig defines the canary tool configuration
 type CanaryConfig struct {
 	DynamicCanaryConfig
-	BootstrapServers              []string
-	BootstrapBackoffMaxAttempts   int
-	BootstrapBackoffScale         time.Duration
-	Topic                         string
-	TopicConfig                   map[string]string
-	ReconcileInterval             time.Duration
-	ClientID                      string
-	ConsumerGroupID               string
-	ProducerLatencyBuckets        []float64
-	EndToEndLatencyBuckets        []float64
-	ExpectedClusterSize           int
-	KafkaVersion                  string
-	DynamicConfigFile             string
-	TLSEnabled                    bool
-	TLSCACert                     string
-	TLSClientCert                 string
-	TLSClientKey                  string
-	TLSInsecureSkipVerify         bool
-	SASLMechanism                 string
-	SASLUser                      string
-	SASLPassword                  string
-	SASLOAuthTokenURL             string
-	SASLOAuthClientID             string
-	SASLOAuthClientSecret         string
-	SASLOAuthScope                string
-	ConnectionCheckInterval       time.Duration
-	ConnectionCheckLatencyBuckets []float64
-	StatusCheckInterval           time.Duration
-	StatusTimeWindow              time.Duration
-	DynamicConfigWatcherInterval  time.Duration
-	TracingEnabled                bool
-	MessageSize                   int
-	PrometheusConstantLabels      prometheus.Labels
+	BootstrapServers                  []string
+	BootstrapBackoffMaxAttempts       int
+	BootstrapBackoffScale             time.Duration
+	Topic                             string
+	TopicConfig                       map[string]string
+	ReconcileInterval                 time.Duration
+	ClientID                          string
+	ConsumerGroupID                   string
+	ProducerLatencyBuckets            []float64
+	EndToEndLatencyBuckets            []float64
+	ExpectedClusterSize               int
+	KafkaVersion                      string
+	DynamicConfigFile                 string
+	TLSEnabled                        bool
+	TLSCACert                         string
+	TLSClientCert                     string
+	TLSClientKey                      string
+	TLSInsecureSkipVerify             bool
+	SASLMechanism                     string
+	SASLUser                          string
+	SASLPassword                      string
+	SASLOAuthTokenURL                 string
+	SASLOAuthClientID                 string
+	SASLOAuthClientSecret             string
+	SASLOAuthScope                    string
+	ConnectionCheckInterval           time.Duration
+	ConnectionCheckLatencyBuckets     []float64
+	StatusCheckInterval               time.Duration
+	StatusTimeWindow                  time.Duration
+	DynamicConfigWatcherInterval      time.Duration
+	SaramaProducerRetryMax            int
+	SaramaProducerRetryBackoffMs      int
+	SaramaNetDialTimeoutMs            int
+	SaramaNetReadTimeoutMs            int
+	SaramaNetWriteTimeoutMs           int
+	SaramaNetKeepAliveMs              int
+	SaramaConsumerSessionTimeoutMs    int
+	SaramaConsumerHeartbeatIntervalMs int
+	SaramaMetadataRefreshFrequencyMs  int
+	SaramaAdminTimeoutMs              int
+	TracingEnabled                    bool
+	MessageSize                       int
+	PrometheusConstantLabels          prometheus.Labels
 }
 
 func NewDynamicCanaryConfig() *DynamicCanaryConfig {
@@ -170,40 +192,50 @@ func NewCanaryConfig() *CanaryConfig {
 	dynamicCanaryConfig := NewDynamicCanaryConfig()
 
 	config := CanaryConfig{
-		DynamicCanaryConfig:           *dynamicCanaryConfig,
-		BootstrapServers:              strings.Split(lookupStringEnv(BootstrapServersEnvVar, BootstrapServersDefault), ","),
-		BootstrapBackoffMaxAttempts:   lookupIntEnv(BootstrapBackoffMaxAttemptsEnvVar, BootstrapBackoffMaxAttemptsDefault),
-		BootstrapBackoffScale:         time.Duration(lookupIntEnv(BootstrapBackoffScaleEnvVar, BootstrapBackoffScaleDefault)),
-		Topic:                         lookupStringEnv(TopicEnvVar, TopicDefault),
-		TopicConfig:                   convertKVPairsToMap(lookupStringEnv(TopicConfigEnvVar, TopicConfigDefault)),
-		ReconcileInterval:             time.Duration(lookupIntEnv(ReconcileIntervalEnvVar, ReconcileIntervalDefault)),
-		ClientID:                      lookupStringEnv(ClientIDEnvVar, ClientIDDefault),
-		ConsumerGroupID:               lookupStringEnv(ConsumerGroupIDEnvVar, ConsumerGroupIDDefault),
-		ProducerLatencyBuckets:        latencyBuckets(lookupStringEnv(ProducerLatencyBucketsEnvVar, ProducerLatencyBucketsDefault)),
-		EndToEndLatencyBuckets:        latencyBuckets(lookupStringEnv(EndToEndLatencyBucketsEnvVar, EndToEndLatencyBucketsDefault)),
-		ExpectedClusterSize:           lookupIntEnv(ExpectedClusterSizeEnvVar, ExpectedClusterSizeDefault),
-		KafkaVersion:                  lookupStringEnv(KafkaVersionEnvVar, KafkaVersionDefault),
-		TLSEnabled:                    lookupBoolEnv(TLSEnabledEnvVar, TLSEnabledDefault),
-		TLSCACert:                     lookupStringEnv(TLSCACertEnvVar, TLSCACertDefault),
-		TLSClientCert:                 lookupStringEnv(TLSClientCertEnvVar, TLSClientCertDefault),
-		TLSClientKey:                  lookupStringEnv(TLSClientKeyEnvVar, TLSClientKeyDefault),
-		TLSInsecureSkipVerify:         lookupBoolEnv(TLSInsecureSkipVerifyEnvVar, TLSInsecureSkipVerifyDefault),
-		SASLMechanism:                 lookupStringEnv(SASLMechanismEnvVar, SASLMechanismDefault),
-		SASLUser:                      lookupStringEnv(SASLUserEnvVar, SASLUserDefault),
-		SASLPassword:                  lookupStringEnv(SASLPasswordEnvVar, SASLPasswordDefault),
-		SASLOAuthTokenURL:             lookupStringEnv(SASLOAuthTokenURLEnvVar, SASLOAuthTokenURLDefault),
-		SASLOAuthClientID:             lookupStringEnv(SASLOAuthClientIDEnvVar, SASLOAuthClientIDDefault),
-		SASLOAuthClientSecret:         lookupStringEnv(SASLOAuthClientSecretEnvVar, SASLOAuthClientSecretDefault),
-		SASLOAuthScope:                lookupStringEnv(SASLOAuthScopeEnvVar, SASLOAuthScopeDefault),
-		ConnectionCheckInterval:       time.Duration(lookupIntEnv(ConnectionCheckIntervalEnvVar, ConnectionCheckIntervalDefault)),
-		ConnectionCheckLatencyBuckets: latencyBuckets(lookupStringEnv(ConnectionCheckLatencyBucketsEnvVar, ConnectionCheckLatencyBucketsDefault)),
-		StatusCheckInterval:           time.Duration(lookupIntEnv(StatusCheckIntervalEnvVar, StatusCheckIntervalDefault)),
-		StatusTimeWindow:              time.Duration(lookupIntEnv(StatusTimeWindowEnvVar, StatusTimeWindowDefault)),
-		DynamicConfigFile:             lookupStringEnv(DynamicConfigFileEnvVar, DynamicConfigFileDefault),
-		DynamicConfigWatcherInterval:  time.Duration(lookupIntEnv(DynamicConfigWatcherIntervalEnvVar, DynamicConfigWatcherIntervalDefault)),
-		TracingEnabled:                lookupBoolEnv(TracingEnabledEnvVar, TracingEnabledDefault),
-		MessageSize:                   messageSize(),
-		PrometheusConstantLabels:      convertKVPairsToPrometheusLabels(lookupStringEnv(PrometheusConsantLabelsEnvVar, PrometheusConsantLabelsDefault)),
+		DynamicCanaryConfig:               *dynamicCanaryConfig,
+		BootstrapServers:                  strings.Split(lookupStringEnv(BootstrapServersEnvVar, BootstrapServersDefault), ","),
+		BootstrapBackoffMaxAttempts:       lookupIntEnv(BootstrapBackoffMaxAttemptsEnvVar, BootstrapBackoffMaxAttemptsDefault),
+		BootstrapBackoffScale:             time.Duration(lookupIntEnv(BootstrapBackoffScaleEnvVar, BootstrapBackoffScaleDefault)),
+		Topic:                             lookupStringEnv(TopicEnvVar, TopicDefault),
+		TopicConfig:                       convertKVPairsToMap(lookupStringEnv(TopicConfigEnvVar, TopicConfigDefault)),
+		ReconcileInterval:                 time.Duration(lookupIntEnv(ReconcileIntervalEnvVar, ReconcileIntervalDefault)),
+		ClientID:                          lookupStringEnv(ClientIDEnvVar, ClientIDDefault),
+		ConsumerGroupID:                   lookupStringEnv(ConsumerGroupIDEnvVar, ConsumerGroupIDDefault),
+		ProducerLatencyBuckets:            latencyBuckets(lookupStringEnv(ProducerLatencyBucketsEnvVar, ProducerLatencyBucketsDefault)),
+		EndToEndLatencyBuckets:            latencyBuckets(lookupStringEnv(EndToEndLatencyBucketsEnvVar, EndToEndLatencyBucketsDefault)),
+		ExpectedClusterSize:               lookupIntEnv(ExpectedClusterSizeEnvVar, ExpectedClusterSizeDefault),
+		KafkaVersion:                      lookupStringEnv(KafkaVersionEnvVar, KafkaVersionDefault),
+		TLSEnabled:                        lookupBoolEnv(TLSEnabledEnvVar, TLSEnabledDefault),
+		TLSCACert:                         lookupStringEnv(TLSCACertEnvVar, TLSCACertDefault),
+		TLSClientCert:                     lookupStringEnv(TLSClientCertEnvVar, TLSClientCertDefault),
+		TLSClientKey:                      lookupStringEnv(TLSClientKeyEnvVar, TLSClientKeyDefault),
+		TLSInsecureSkipVerify:             lookupBoolEnv(TLSInsecureSkipVerifyEnvVar, TLSInsecureSkipVerifyDefault),
+		SASLMechanism:                     lookupStringEnv(SASLMechanismEnvVar, SASLMechanismDefault),
+		SASLUser:                          lookupStringEnv(SASLUserEnvVar, SASLUserDefault),
+		SASLPassword:                      lookupStringEnv(SASLPasswordEnvVar, SASLPasswordDefault),
+		SASLOAuthTokenURL:                 lookupStringEnv(SASLOAuthTokenURLEnvVar, SASLOAuthTokenURLDefault),
+		SASLOAuthClientID:                 lookupStringEnv(SASLOAuthClientIDEnvVar, SASLOAuthClientIDDefault),
+		SASLOAuthClientSecret:             lookupStringEnv(SASLOAuthClientSecretEnvVar, SASLOAuthClientSecretDefault),
+		SASLOAuthScope:                    lookupStringEnv(SASLOAuthScopeEnvVar, SASLOAuthScopeDefault),
+		ConnectionCheckInterval:           time.Duration(lookupIntEnv(ConnectionCheckIntervalEnvVar, ConnectionCheckIntervalDefault)),
+		ConnectionCheckLatencyBuckets:     latencyBuckets(lookupStringEnv(ConnectionCheckLatencyBucketsEnvVar, ConnectionCheckLatencyBucketsDefault)),
+		StatusCheckInterval:               time.Duration(lookupIntEnv(StatusCheckIntervalEnvVar, StatusCheckIntervalDefault)),
+		StatusTimeWindow:                  time.Duration(lookupIntEnv(StatusTimeWindowEnvVar, StatusTimeWindowDefault)),
+		DynamicConfigFile:                 lookupStringEnv(DynamicConfigFileEnvVar, DynamicConfigFileDefault),
+		DynamicConfigWatcherInterval:      time.Duration(lookupIntEnv(DynamicConfigWatcherIntervalEnvVar, DynamicConfigWatcherIntervalDefault)),
+		SaramaProducerRetryMax:            lookupIntEnv(SaramaProducerRetryMaxEnvVar, SaramaProducerRetryMaxDefault),
+		SaramaProducerRetryBackoffMs:      lookupOptionalIntEnv(SaramaProducerRetryBackoffMsEnvVar),
+		SaramaNetDialTimeoutMs:            lookupOptionalIntEnv(SaramaNetDialTimeoutMsEnvVar),
+		SaramaNetReadTimeoutMs:            lookupOptionalIntEnv(SaramaNetReadTimeoutMsEnvVar),
+		SaramaNetWriteTimeoutMs:           lookupOptionalIntEnv(SaramaNetWriteTimeoutMsEnvVar),
+		SaramaNetKeepAliveMs:              lookupOptionalIntEnv(SaramaNetKeepAliveMsEnvVar),
+		SaramaConsumerSessionTimeoutMs:    lookupOptionalIntEnv(SaramaConsumerSessionTimeoutMsEnvVar),
+		SaramaConsumerHeartbeatIntervalMs: lookupOptionalIntEnv(SaramaConsumerHeartbeatIntervalMsEnvVar),
+		SaramaMetadataRefreshFrequencyMs:  lookupOptionalIntEnv(SaramaMetadataRefreshFrequencyMsEnvVar),
+		SaramaAdminTimeoutMs:              lookupOptionalIntEnv(SaramaAdminTimeoutMsEnvVar),
+		TracingEnabled:                    lookupBoolEnv(TracingEnabledEnvVar, TracingEnabledDefault),
+		MessageSize:                       messageSize(),
+		PrometheusConstantLabels:          convertKVPairsToPrometheusLabels(lookupStringEnv(PrometheusConsantLabelsEnvVar, PrometheusConsantLabelsDefault)),
 	}
 	return &config
 }
@@ -223,6 +255,19 @@ func lookupIntEnv(envVar string, defaultValue int) int {
 	}
 	intVal, _ := strconv.Atoi(envVarValue)
 	return intVal
+}
+
+func lookupOptionalIntEnv(envVar string) int {
+	raw, ok := os.LookupEnv(envVar)
+	if !ok || raw == "" {
+		return SaramaUnsetMsDefault
+	}
+	n, err := strconv.Atoi(raw)
+	if err != nil {
+		glog.Warningf("%s=%q is not an integer; ignoring", envVar, raw)
+		return SaramaUnsetMsDefault
+	}
+	return n
 }
 
 func lookupBoolEnv(envVar string, defaultValue bool) bool {
@@ -318,13 +363,19 @@ func (c CanaryConfig) String() string {
 		"TLSEnabled:%t, TLSCACert:%s, TLSClientCert:%s, TLSClientKey:%s, TLSInsecureSkipVerify:%t,"+
 		"SASLMechanism:%s, SASLUser:%s, SASLPassword:%s, SASLOAuthTokenURL:%s, SASLOAuthClientID:%s, SASLOAuthClientSecret:%s, SASLOAuthScope:%s, "+
 		"ConnectionCheckInterval:%d ms, ConnectionCheckLatencyBuckets:%v, StatusCheckInterval:%d ms, StatusTimeWindow:%d ms,"+
-		"DynamicConfigFile: %s, DynamicCanaryConfig: %s, DynamicConfigWatcherInterval: %d ms, TracingEnabled:%t, MessageSize:%d KB}",
+		"DynamicConfigFile: %s, DynamicCanaryConfig: %s, DynamicConfigWatcherInterval: %d ms, "+
+		"SaramaProducerRetryMax:%d, SaramaProducerRetryBackoffMs:%d, SaramaNetDialTimeoutMs:%d, SaramaNetReadTimeoutMs:%d, SaramaNetWriteTimeoutMs:%d, SaramaNetKeepAliveMs:%d, "+
+		"SaramaConsumerSessionTimeoutMs:%d, SaramaConsumerHeartbeatIntervalMs:%d, SaramaMetadataRefreshFrequencyMs:%d, SaramaAdminTimeoutMs:%d, "+
+		"TracingEnabled:%t, MessageSize:%d KB}",
 		c.BootstrapServers, c.BootstrapBackoffMaxAttempts, c.BootstrapBackoffScale, c.Topic, c.TopicConfig, c.ReconcileInterval, c.ClientID, c.ConsumerGroupID,
 		c.ProducerLatencyBuckets, c.EndToEndLatencyBuckets, c.ExpectedClusterSize, c.KafkaVersion,
 		c.TLSEnabled, TLSCACert, TLSClientCert, TLSClientKey, c.TLSInsecureSkipVerify, c.SASLMechanism, SASLUser, SASLPassword,
 		c.SASLOAuthTokenURL, c.SASLOAuthClientID, SASLOAuthClientSecret, c.SASLOAuthScope,
 		c.ConnectionCheckInterval, c.ConnectionCheckLatencyBuckets, c.StatusCheckInterval, c.StatusTimeWindow,
-		c.DynamicConfigFile, c.DynamicCanaryConfig, c.DynamicConfigWatcherInterval, c.TracingEnabled, c.MessageSize)
+		c.DynamicConfigFile, c.DynamicCanaryConfig, c.DynamicConfigWatcherInterval,
+		c.SaramaProducerRetryMax, c.SaramaProducerRetryBackoffMs, c.SaramaNetDialTimeoutMs, c.SaramaNetReadTimeoutMs, c.SaramaNetWriteTimeoutMs, c.SaramaNetKeepAliveMs,
+		c.SaramaConsumerSessionTimeoutMs, c.SaramaConsumerHeartbeatIntervalMs, c.SaramaMetadataRefreshFrequencyMs, c.SaramaAdminTimeoutMs,
+		c.TracingEnabled, c.MessageSize)
 }
 
 func messageSize() int {

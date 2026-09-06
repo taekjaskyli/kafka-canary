@@ -81,6 +81,16 @@ runtime from a JSON file (`DYNAMIC_CONFIG_FILE`).
 | `EXPECTED_CLUSTER_SIZE` | Wait for this many brokers before creating the topic; `-1` = dynamic | `-1` | |
 | `KAFKA_VERSION` | Kafka protocol the client speaks. Does not have to match the broker version. Default is fine for Kafka 3.x and 4.x. | `3.2.0` | |
 | `SARAMA_LOG_ENABLED` | Enable Sarama client logs | `false` | `saramaLogEnabled` |
+| `SARAMA_PRODUCER_RETRY_MAX` | Sarama produce retries. Canary default is `0` (one shot) | `0` | |
+| `SARAMA_PRODUCER_RETRY_BACKOFF_MS` | Backoff between produce retries (ms). Unset = library default | empty | |
+| `SARAMA_NET_DIAL_TIMEOUT_MS` | Broker dial timeout (ms). Unset = library default (30s) | empty | |
+| `SARAMA_NET_READ_TIMEOUT_MS` | Broker read timeout (ms). Unset = library default (30s) | empty | |
+| `SARAMA_NET_WRITE_TIMEOUT_MS` | Broker write timeout (ms). Unset = library default (30s) | empty | |
+| `SARAMA_NET_KEEP_ALIVE_MS` | TCP keepalive (ms). Unset = library default | empty | |
+| `SARAMA_CONSUMER_SESSION_TIMEOUT_MS` | Consumer group session timeout (ms). Unset = library default (10s) | empty | |
+| `SARAMA_CONSUMER_HEARTBEAT_INTERVAL_MS` | Consumer group heartbeat (ms). Must be less than session timeout. Unset = library default (3s) | empty | |
+| `SARAMA_METADATA_REFRESH_FREQUENCY_MS` | Metadata refresh interval (ms). `0` disables. Unset = library default (10m) | empty | |
+| `SARAMA_ADMIN_TIMEOUT_MS` | Admin request timeout (ms). Unset = library default (3s) | empty | |
 | `VERBOSITY_LOG_LEVEL` | `0` = INFO, `1` = DEBUG, `2` = TRACE | `0` | `verbosityLogLevel` |
 | `TLS_ENABLED` | Use TLS | `false` | |
 | `TLS_CA_CERT` | CA certificate: a filesystem path, or PEM in the env var value itself | empty | |
@@ -105,6 +115,8 @@ runtime from a JSON file (`DYNAMIC_CONFIG_FILE`).
 | `PROMETHEUS_CONSTANT_LABELS` | Extra labels on all metrics, `key=value` pairs separated by `;` | empty | |
 
 `OAUTHBEARER` uses the OAuth 2.0 client credentials grant against `SASL_OAUTH_TOKEN_URL`.
+
+`SARAMA_*` timeouts are startup-only. `DYNAMIC_CONFIG_FILE` still only flips `saramaLogEnabled` and `verbosityLogLevel` at runtime; changing session timeout there would not recreate the Kafka client. Raising `SARAMA_PRODUCER_RETRY_MAX` hides a single produce failure and folds retries into latency.
 
 When tracing is on, the OpenTelemetry SDK sends OTLP to `localhost:4317` unless you set `OTEL_EXPORTER_OTLP_ENDPOINT` (that variable is the SDK's, not canary's).
 

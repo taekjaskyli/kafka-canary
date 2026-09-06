@@ -163,6 +163,18 @@ extraEnv:
         key: client-secret
 ```
 
+## Sarama
+
+Optional client timeouts, same style as `SARAMA_LOG_ENABLED`. Names: project README.
+Applied at startup.
+
+```yaml
+env:
+  SARAMA_PRODUCER_RETRY_MAX: 3
+  SARAMA_CONSUMER_SESSION_TIMEOUT_MS: 45000
+  SARAMA_CONSUMER_HEARTBEAT_INTERVAL_MS: 15000
+```
+
 ## Prometheus
 
 The pod serves `/metrics` on port `http` (8080).

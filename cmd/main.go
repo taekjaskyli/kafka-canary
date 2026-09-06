@@ -134,34 +134,39 @@ func main() {
 }
 
 func createSaramaConfig(canaryConfig *config.CanaryConfig) (*sarama.Config, error) {
-	config := sarama.NewConfig()
+	saramaConfig := sarama.NewConfig()
 	kafkaVersion, err := sarama.ParseKafkaVersion(canaryConfig.KafkaVersion)
 	if err != nil {
 		return nil, err
 	}
-	config.Version = kafkaVersion
-	config.ClientID = canaryConfig.ClientID
+	saramaConfig.Version = kafkaVersion
+	saramaConfig.ClientID = canaryConfig.ClientID
 	// set manual partitioner in order to specify the destination partition on sending
-	config.Producer.Partitioner = sarama.NewManualPartitioner
-	config.Producer.Return.Successes = true
-	config.Producer.RequiredAcks = sarama.WaitForAll
-	config.Producer.Retry.Max = 0
-	config.Consumer.Return.Errors = true
+	saramaConfig.Producer.Partitioner = sarama.NewManualPartitioner
+	saramaConfig.Producer.Return.Successes = true
+	saramaConfig.Producer.RequiredAcks = sarama.WaitForAll
+	saramaConfig.Producer.Retry.Max = 0
+	saramaConfig.Consumer.Return.Errors = true
 
 	if canaryConfig.TLSEnabled {
-		config.Net.TLS.Enable = true
-		if config.Net.TLS.Config, err = security.NewTLSConfig(canaryConfig); err != nil {
+		saramaConfig.Net.TLS.Enable = true
+		if saramaConfig.Net.TLS.Config, err = security.NewTLSConfig(canaryConfig); err != nil {
 			glog.Fatalf("Error configuring TLS: %v", err)
 		}
 	}
 
 	if canaryConfig.SASLMechanism != "" {
-		if err = security.SetAuthConfig(canaryConfig, config); err != nil {
+		if err = security.SetAuthConfig(canaryConfig, saramaConfig); err != nil {
 			glog.Fatalf("Error configuring SASL authentication: %v", err)
 		}
 	}
 
-	return config, nil
+	config.ApplySaramaOverrides(saramaConfig, canaryConfig)
+	if err = saramaConfig.Validate(); err != nil {
+		return nil, err
+	}
+
+	return saramaConfig, nil
 }
 
 func newClientWithRetry(canaryConfig *config.CanaryConfig, config *sarama.Config) (sarama.Client, error) {
