@@ -10,14 +10,16 @@
 package services
 
 import (
+	"errors"
 	"fmt"
-	"github.com/IBM/sarama"
-	"github.com/taekjaskyli/kafka-canary/internal/config"
 	"math/rand"
 	"reflect"
 	"testing"
 	"time"
 	"unsafe"
+
+	"github.com/IBM/sarama"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
 )
 
 func TestRequestedAssignments(t *testing.T) {
@@ -173,4 +175,98 @@ func setUnexportedField(field reflect.Value, value interface{}) {
 	reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).
 		Elem().
 		Set(reflect.ValueOf(value))
+}
+
+func existingTopicMetadata(name string) *sarama.TopicMetadata {
+	return &sarama.TopicMetadata{
+		Name: name,
+		Err:  sarama.ErrNoError,
+		Partitions: []*sarama.PartitionMetadata{
+			{ID: 0, Leader: 0, Replicas: []int32{0, 1}, Isr: []int32{0, 1}},
+			{ID: 1, Leader: 1, Replicas: []int32{1, 0}, Isr: []int32{1, 0}},
+		},
+	}
+}
+
+func TestReconcileManageTopicFalseUsesExistingAssignments(t *testing.T) {
+	topic := "kafka-canary"
+	admin := &mockClusterAdmin{topicMeta: existingTopicMetadata(topic)}
+	cfg := &config.CanaryConfig{
+		Topic:               topic,
+		ManageTopic:         false,
+		TopicConfig:         map[string]string{"retention.ms": "600000"},
+		ExpectedClusterSize: config.ExpectedClusterSizeDefault,
+	}
+	ts := NewTopicService(cfg, nil).(*topicService)
+	ts.admin = admin
+
+	result, err := ts.Reconcile()
+	if err != nil {
+		t.Fatalf("Reconcile: %v", err)
+	}
+	if admin.describeClusterCalls != 0 || admin.createTopicCalls != 0 || admin.alterConfigCalls != 0 || admin.incrementalAlterConfigCalls != 0 || admin.alterReassignCalls != 0 || admin.createPartitionsCalls != 0 {
+		t.Fatalf("create=%d alterConfig=%d incrementalAlter=%d reassign=%d createPartitions=%d describeCluster=%d",
+			admin.createTopicCalls, admin.alterConfigCalls, admin.incrementalAlterConfigCalls, admin.alterReassignCalls, admin.createPartitionsCalls, admin.describeClusterCalls)
+	}
+	if len(result.Assignments[0]) != 2 || result.Assignments[0][0] != 0 {
+		t.Fatalf("assignments = %v", result.Assignments)
+	}
+	if result.Leaders[0] != 0 || result.Leaders[1] != 1 {
+		t.Fatalf("leaders = %v", result.Leaders)
+	}
+}
+
+func TestReconcileManageTopicFalseMissingTopic(t *testing.T) {
+	topic := "kafka-canary"
+	admin := &mockClusterAdmin{
+		topicMeta: &sarama.TopicMetadata{Name: topic, Err: sarama.ErrUnknownTopicOrPartition},
+	}
+	cfg := &config.CanaryConfig{Topic: topic, ManageTopic: false}
+	ts := NewTopicService(cfg, nil).(*topicService)
+	ts.admin = admin
+
+	_, err := ts.Reconcile()
+	var missing *ErrCanaryTopicMissing
+	if !errors.As(err, &missing) {
+		t.Fatalf("got %v, want ErrCanaryTopicMissing", err)
+	}
+	if missing.Topic != topic {
+		t.Fatalf("topic = %s", missing.Topic)
+	}
+	if admin.createTopicCalls != 0 {
+		t.Fatalf("CreateTopic called")
+	}
+}
+
+func TestReconcileManageTopicTrueAltersConfig(t *testing.T) {
+	topic := "kafka-canary"
+	brokers, _ := createBrokers(t, 1, false)
+	admin := &mockClusterAdmin{
+		topicMeta: existingTopicMetadata(topic),
+		brokers:   brokers,
+	}
+	cfg := &config.CanaryConfig{
+		Topic:               topic,
+		ManageTopic:         true,
+		TopicConfig:         map[string]string{"retention.ms": "600000"},
+		ExpectedClusterSize: 3,
+	}
+	ts := NewTopicService(cfg, nil).(*topicService)
+	ts.admin = admin
+
+	if _, err := ts.Reconcile(); err != nil {
+		t.Fatalf("Reconcile: %v", err)
+	}
+	if admin.describeClusterCalls != 1 {
+		t.Fatalf("DescribeCluster calls = %d", admin.describeClusterCalls)
+	}
+	if admin.incrementalAlterConfigCalls != 1 {
+		t.Fatalf("IncrementalAlterConfig calls = %d", admin.incrementalAlterConfigCalls)
+	}
+	if admin.alterConfigCalls != 0 {
+		t.Fatalf("AlterConfig calls = %d", admin.alterConfigCalls)
+	}
+	if admin.alterReassignCalls != 0 || admin.createTopicCalls != 0 {
+		t.Fatalf("create=%d reassign=%d", admin.createTopicCalls, admin.alterReassignCalls)
+	}
 }

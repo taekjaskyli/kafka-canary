@@ -79,6 +79,22 @@ These are three different Kafka concepts (all set via `env`):
 `client.id` is what the broker logs and what Prometheus uses as the `clientid`
 label. It is not the consumer group.
 
+## Pre-created topic
+
+When the canary principal must not create or alter the topic (`Describe` only,
+no `AlterConfigs` / reassignment), set `MANAGE_TOPIC=false` and create the
+topic yourself (typically partitions = brokers).
+
+`EXPECTED_CLUSTER_SIZE` is not required for that. Omit it (default `-1`):
+connection checks refresh the broker list each time. Set it to the broker
+count only if you want probes pinned to that many brokers.
+
+```yaml
+env:
+  KAFKA_BOOTSTRAP_SERVERS: my-cluster-kafka-bootstrap:9092
+  MANAGE_TOPIC: false
+```
+
 ## TLS
 
 `TLS_CA_CERT`, `TLS_CLIENT_CERT`, and `TLS_CLIENT_KEY` accept a filesystem

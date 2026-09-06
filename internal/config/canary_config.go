@@ -24,6 +24,7 @@ const (
 	BootstrapBackoffScaleEnvVar             = "KAFKA_BOOTSTRAP_BACKOFF_SCALE"
 	TopicEnvVar                             = "TOPIC"
 	TopicConfigEnvVar                       = "TOPIC_CONFIG"
+	ManageTopicEnvVar                       = "MANAGE_TOPIC"
 	ReconcileIntervalEnvVar                 = "RECONCILE_INTERVAL_MS"
 	ClientIDEnvVar                          = "CLIENT_ID"
 	ConsumerGroupIDEnvVar                   = "CONSUMER_GROUP_ID"
@@ -70,6 +71,7 @@ const (
 	BootstrapBackoffScaleDefault         = 5000
 	TopicDefault                         = "kafka-canary"
 	TopicConfigDefault                   = ""
+	ManageTopicDefault                   = true
 	ReconcileIntervalDefault             = 30000
 	ClientIDDefault                      = "kafka-canary-client"
 	ConsumerGroupIDDefault               = "kafka-canary-group"
@@ -117,6 +119,7 @@ type CanaryConfig struct {
 	BootstrapBackoffScale             time.Duration
 	Topic                             string
 	TopicConfig                       map[string]string
+	ManageTopic                       bool
 	ReconcileInterval                 time.Duration
 	ClientID                          string
 	ConsumerGroupID                   string
@@ -198,6 +201,7 @@ func NewCanaryConfig() *CanaryConfig {
 		BootstrapBackoffScale:             time.Duration(lookupIntEnv(BootstrapBackoffScaleEnvVar, BootstrapBackoffScaleDefault)),
 		Topic:                             lookupStringEnv(TopicEnvVar, TopicDefault),
 		TopicConfig:                       convertKVPairsToMap(lookupStringEnv(TopicConfigEnvVar, TopicConfigDefault)),
+		ManageTopic:                       lookupBoolEnv(ManageTopicEnvVar, ManageTopicDefault),
 		ReconcileInterval:                 time.Duration(lookupIntEnv(ReconcileIntervalEnvVar, ReconcileIntervalDefault)),
 		ClientID:                          lookupStringEnv(ClientIDEnvVar, ClientIDDefault),
 		ConsumerGroupID:                   lookupStringEnv(ConsumerGroupIDEnvVar, ConsumerGroupIDDefault),
@@ -250,10 +254,14 @@ func lookupStringEnv(envVar string, defaultValue string) string {
 
 func lookupIntEnv(envVar string, defaultValue int) int {
 	envVarValue, ok := os.LookupEnv(envVar)
-	if !ok {
+	if !ok || envVarValue == "" {
 		return defaultValue
 	}
-	intVal, _ := strconv.Atoi(envVarValue)
+	intVal, err := strconv.Atoi(envVarValue)
+	if err != nil {
+		glog.Warningf("%s=%q is not an integer; using %d", envVar, envVarValue, defaultValue)
+		return defaultValue
+	}
 	return intVal
 }
 
@@ -272,10 +280,14 @@ func lookupOptionalIntEnv(envVar string) int {
 
 func lookupBoolEnv(envVar string, defaultValue bool) bool {
 	envVarValue, ok := os.LookupEnv(envVar)
-	if !ok {
+	if !ok || envVarValue == "" {
 		return defaultValue
 	}
-	boolVal, _ := strconv.ParseBool(envVarValue)
+	boolVal, err := strconv.ParseBool(envVarValue)
+	if err != nil {
+		glog.Warningf("%s=%q is not a boolean; using %t", envVar, envVarValue, defaultValue)
+		return defaultValue
+	}
 	return boolVal
 }
 
@@ -358,7 +370,7 @@ func (c CanaryConfig) String() string {
 		SASLOAuthClientSecret = "[OAuth client secret]"
 	}
 
-	return fmt.Sprintf("{BootstrapServers:%s, BootstrapBackoffMaxAttempts:%d, BootstrapBackoffScale:%d, Topic:%s, TopicConfig:%v, ReconcileInterval:%d ms, "+
+	return fmt.Sprintf("{BootstrapServers:%s, BootstrapBackoffMaxAttempts:%d, BootstrapBackoffScale:%d, Topic:%s, TopicConfig:%v, ManageTopic:%t, ReconcileInterval:%d ms, "+
 		"ClientID:%s, ConsumerGroupID:%s, ProducerLatencyBuckets:%v, EndToEndLatencyBuckets:%v, ExpectedClusterSize:%d, KafkaVersion:%s,"+
 		"TLSEnabled:%t, TLSCACert:%s, TLSClientCert:%s, TLSClientKey:%s, TLSInsecureSkipVerify:%t,"+
 		"SASLMechanism:%s, SASLUser:%s, SASLPassword:%s, SASLOAuthTokenURL:%s, SASLOAuthClientID:%s, SASLOAuthClientSecret:%s, SASLOAuthScope:%s, "+
@@ -367,7 +379,7 @@ func (c CanaryConfig) String() string {
 		"SaramaProducerRetryMax:%d, SaramaProducerRetryBackoffMs:%d, SaramaNetDialTimeoutMs:%d, SaramaNetReadTimeoutMs:%d, SaramaNetWriteTimeoutMs:%d, SaramaNetKeepAliveMs:%d, "+
 		"SaramaConsumerSessionTimeoutMs:%d, SaramaConsumerHeartbeatIntervalMs:%d, SaramaMetadataRefreshFrequencyMs:%d, SaramaAdminTimeoutMs:%d, "+
 		"TracingEnabled:%t, MessageSize:%d KB}",
-		c.BootstrapServers, c.BootstrapBackoffMaxAttempts, c.BootstrapBackoffScale, c.Topic, c.TopicConfig, c.ReconcileInterval, c.ClientID, c.ConsumerGroupID,
+		c.BootstrapServers, c.BootstrapBackoffMaxAttempts, c.BootstrapBackoffScale, c.Topic, c.TopicConfig, c.ManageTopic, c.ReconcileInterval, c.ClientID, c.ConsumerGroupID,
 		c.ProducerLatencyBuckets, c.EndToEndLatencyBuckets, c.ExpectedClusterSize, c.KafkaVersion,
 		c.TLSEnabled, TLSCACert, TLSClientCert, TLSClientKey, c.TLSInsecureSkipVerify, c.SASLMechanism, SASLUser, SASLPassword,
 		c.SASLOAuthTokenURL, c.SASLOAuthClientID, SASLOAuthClientSecret, c.SASLOAuthScope,

@@ -60,8 +60,32 @@ func (e *ErrExpectedClusterSize) Error() string {
 	return "Current cluster size differs from the expected size"
 }
 
+// ErrCanaryTopicMissing is returned when the canary topic does not exist and MANAGE_TOPIC is false.
+type ErrCanaryTopicMissing struct {
+	Topic string
+}
+
+func (e *ErrCanaryTopicMissing) Error() string {
+	return "canary topic " + e.Topic + " does not exist (MANAGE_TOPIC is false)"
+}
+
 // NewTopicService returns an instance of TopicService
 func NewTopicService(canaryConfig *config.CanaryConfig, saramaConfig *sarama.Config) TopicService {
+	registerTopicMetrics(canaryConfig)
+
+	// lazy creation of the Sarama cluster admin client when reconcile for the first time or it's closed
+	ts := topicService{
+		canaryConfig: canaryConfig,
+		saramaConfig: saramaConfig,
+		admin:        nil,
+	}
+	return &ts
+}
+
+func registerTopicMetrics(canaryConfig *config.CanaryConfig) {
+	if topicCreationFailed != nil {
+		return
+	}
 
 	topicCreationFailed = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "topic_creation_failed_total",
@@ -97,14 +121,6 @@ func NewTopicService(canaryConfig *config.CanaryConfig, saramaConfig *sarama.Con
 		Help:        "Total number of errors while altering configuration for the canary topic",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"topic"})
-
-	// lazy creation of the Sarama cluster admin client when reconcile for the first time or it's closed
-	ts := topicService{
-		canaryConfig: canaryConfig,
-		saramaConfig: saramaConfig,
-		admin:        nil,
-	}
-	return &ts
 }
 
 // Reconcile does a reconcile on the canary topic
@@ -144,13 +160,16 @@ func (ts *topicService) reconcileTopic() (TopicReconcileResult, error) {
 		ts.admin = admin
 	}
 
-	// getting brokers for assigning canary topic replicas accordingly
-	// on creation or cluster scale up/down when topic already exists
-	brokers, _, err := ts.admin.DescribeCluster()
-	if err != nil {
-		describeClusterError.With(nil).Inc()
-		glog.Errorf("Error describing cluster: %v", err)
-		return result, err
+	var brokers []*sarama.Broker
+	if ts.canaryConfig.ManageTopic {
+		// brokers are used to create the topic or reassign partitions
+		var err error
+		brokers, _, err = ts.admin.DescribeCluster()
+		if err != nil {
+			describeClusterError.With(nil).Inc()
+			glog.Errorf("Error describing cluster: %v", err)
+			return result, err
+		}
 	}
 
 	topicMetadata, err := ts.describeCanaryTopic()
@@ -172,6 +191,11 @@ func (ts *topicService) reconcileTopic() (TopicReconcileResult, error) {
 	}
 
 	if errors.Is(topicMetadata.Err, sarama.ErrUnknownTopicOrPartition) {
+
+		if !ts.canaryConfig.ManageTopic {
+			glog.Errorf("The canary topic %s doesn't exist and MANAGE_TOPIC is false", topicMetadata.Name)
+			return result, &ErrCanaryTopicMissing{Topic: topicMetadata.Name}
+		}
 
 		// canary topic doesn't exist, going to create it
 		glog.V(1).Infof("The canary topic %s doesn't exist", topicMetadata.Name)
@@ -204,36 +228,40 @@ func (ts *topicService) reconcileTopic() (TopicReconcileResult, error) {
 		glog.V(1).Infof("The canary topic %s already exists", topicMetadata.Name)
 		logTopicMetadata(topicMetadata)
 
-		// topic exists so altering the configuration with the provided one (only at startup)
-		if !ts.initialized {
-			if err := ts.alterTopicConfiguration(); err != nil {
-				labels := prometheus.Labels{
-					"topic": topicMetadata.Name,
-				}
-				alterTopicConfigurationError.With(labels).Inc()
-				glog.Errorf("Error altering topic configuration %s: %v", topicMetadata.Name, err)
-				return result, err
-			}
-		}
-
-		// topic partitions reassignment happens if "dynamic" reassignment is enabled
-		// or the topic service is just starting up with the expected number of brokers
-		if ts.isDynamicReassignmentEnabled() || (!ts.initialized && ts.canaryConfig.ExpectedClusterSize == len(brokers)) {
-
-			glog.Infof("Going to reassign topic partitions if needed")
-			result.RefreshProducerMetadata = len(brokers) != len(topicMetadata.Partitions)
-			if result.Assignments, err = ts.alterTopicAssignments(len(topicMetadata.Partitions), brokers); err != nil {
-				labels := prometheus.Labels{
-					"topic": topicMetadata.Name,
-				}
-				alterTopicAssignmentsError.With(labels).Inc()
-				glog.Errorf("Error reassigning partitions for topic %s: %v", topicMetadata.Name, err)
-				return result, err
-			}
-			ts.isPreferredLeaderElectionNeeded(len(brokers), topicMetadata)
-			// TODO force a leader election. The feature is missing in Sarama library right now.
-		} else {
+		if !ts.canaryConfig.ManageTopic {
 			result.Assignments = ts.currentAssignments(topicMetadata)
+		} else {
+			// topic exists so altering the configuration with the provided one (only at startup)
+			if !ts.initialized {
+				if err := ts.alterTopicConfiguration(); err != nil {
+					labels := prometheus.Labels{
+						"topic": topicMetadata.Name,
+					}
+					alterTopicConfigurationError.With(labels).Inc()
+					glog.Errorf("Error altering topic configuration %s: %v", topicMetadata.Name, err)
+					return result, err
+				}
+			}
+
+			// topic partitions reassignment happens if "dynamic" reassignment is enabled
+			// or the topic service is just starting up with the expected number of brokers
+			if ts.isDynamicReassignmentEnabled() || (!ts.initialized && ts.canaryConfig.ExpectedClusterSize == len(brokers)) {
+
+				glog.Infof("Going to reassign topic partitions if needed")
+				result.RefreshProducerMetadata = len(brokers) != len(topicMetadata.Partitions)
+				if result.Assignments, err = ts.alterTopicAssignments(len(topicMetadata.Partitions), brokers); err != nil {
+					labels := prometheus.Labels{
+						"topic": topicMetadata.Name,
+					}
+					alterTopicAssignmentsError.With(labels).Inc()
+					glog.Errorf("Error reassigning partitions for topic %s: %v", topicMetadata.Name, err)
+					return result, err
+				}
+				ts.isPreferredLeaderElectionNeeded(len(brokers), topicMetadata)
+				// TODO force a leader election. The feature is missing in Sarama library right now.
+			} else {
+				result.Assignments = ts.currentAssignments(topicMetadata)
+			}
 		}
 	} else {
 		labels := prometheus.Labels{
@@ -277,15 +305,18 @@ func (ts *topicService) Close() {
 }
 
 func (ts *topicService) alterTopicConfiguration() error {
-	topicConfig := make(map[string]*string, len(ts.canaryConfig.TopicConfig))
-	for index, param := range ts.canaryConfig.TopicConfig {
+	if len(ts.canaryConfig.TopicConfig) == 0 {
+		return nil
+	}
+	entries := make(map[string]sarama.IncrementalAlterConfigsEntry, len(ts.canaryConfig.TopicConfig))
+	for key, param := range ts.canaryConfig.TopicConfig {
 		p := param
-		topicConfig[index] = &p
+		entries[key] = sarama.IncrementalAlterConfigsEntry{
+			Operation: sarama.IncrementalAlterConfigsOperationSet,
+			Value:     &p,
+		}
 	}
-	if len(topicConfig) != 0 {
-		return ts.admin.AlterConfig(sarama.TopicResource, ts.canaryConfig.Topic, topicConfig, false)
-	}
-	return nil
+	return ts.admin.IncrementalAlterConfig(sarama.TopicResource, ts.canaryConfig.Topic, entries, false)
 }
 
 func (ts *topicService) createTopic(brokers []*sarama.Broker) (map[int32][]int32, error) {
