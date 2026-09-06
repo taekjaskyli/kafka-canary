@@ -25,6 +25,7 @@ func TestConfigDefault(t *testing.T) {
 	assertStringConfigParameter(c.Topic, TopicDefault, t)
 	topicConfigDefault := convertKVPairsToMap(TopicConfigDefault)
 	assertMapConfigParameter(c.TopicConfig, topicConfigDefault, t)
+	assertBoolConfigParameter(c.ManageTopic, ManageTopicDefault, t)
 	assertDurationConfigParameter(c.ReconcileInterval, ReconcileIntervalDefault, t)
 	assertStringConfigParameter(c.ClientID, ClientIDDefault, t)
 	assertStringConfigParameter(c.ConsumerGroupID, ConsumerGroupIDDefault, t)
@@ -96,6 +97,30 @@ func TestMessageSizeNotIntegerTreatedAsZero(t *testing.T) {
 	assertIntConfigParameter(c.MessageSize, 0, t)
 }
 
+func TestManageTopicFalse(t *testing.T) {
+	t.Setenv(ManageTopicEnvVar, "false")
+	c := NewCanaryConfig()
+	assertBoolConfigParameter(c.ManageTopic, false, t)
+}
+
+func TestManageTopicEmptyUsesDefault(t *testing.T) {
+	t.Setenv(ManageTopicEnvVar, "")
+	c := NewCanaryConfig()
+	assertBoolConfigParameter(c.ManageTopic, ManageTopicDefault, t)
+}
+
+func TestExpectedClusterSizeEmptyUsesDefault(t *testing.T) {
+	t.Setenv(ExpectedClusterSizeEnvVar, "")
+	c := NewCanaryConfig()
+	assertIntConfigParameter(c.ExpectedClusterSize, ExpectedClusterSizeDefault, t)
+}
+
+func TestExpectedClusterSizeInvalidUsesDefault(t *testing.T) {
+	t.Setenv(ExpectedClusterSizeEnvVar, "null")
+	c := NewCanaryConfig()
+	assertIntConfigParameter(c.ExpectedClusterSize, ExpectedClusterSizeDefault, t)
+}
+
 func TestOAuthConfig(t *testing.T) {
 	t.Setenv(SASLOAuthTokenURLEnvVar, "https://idp.example.com/token")
 	t.Setenv(SASLOAuthClientIDEnvVar, "canary")
@@ -137,6 +162,7 @@ func TestConfigCustom(t *testing.T) {
 	os.Setenv(BootstrapBackoffScaleEnvVar, "1000")
 	os.Setenv(TopicEnvVar, "my-kafka-canary-topic")
 	os.Setenv(TopicConfigEnvVar, "retention.ms=600000;segment.bytes=16384;cleanup.policy=compact,delete")
+	os.Setenv(ManageTopicEnvVar, "false")
 	os.Setenv(ReconcileIntervalEnvVar, "10000")
 	os.Setenv(ClientIDEnvVar, "my-client-id")
 	os.Setenv(ConsumerGroupIDEnvVar, "my-consumer-group-id")
@@ -167,6 +193,7 @@ func TestConfigCustom(t *testing.T) {
 	assertStringConfigParameter(c.Topic, "my-kafka-canary-topic", t)
 	topicConfig := convertKVPairsToMap("retention.ms=600000;segment.bytes=16384;cleanup.policy=compact,delete")
 	assertMapConfigParameter(c.TopicConfig, topicConfig, t)
+	assertBoolConfigParameter(c.ManageTopic, false, t)
 	assertDurationConfigParameter(c.ReconcileInterval, 10000, t)
 	assertStringConfigParameter(c.ClientID, "my-client-id", t)
 	assertStringConfigParameter(c.ConsumerGroupID, "my-consumer-group-id", t)

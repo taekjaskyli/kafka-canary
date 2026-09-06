@@ -16,7 +16,7 @@ Upstream is archived; this repo continues that work.
 
 Kafka Canary shows whether an [Apache Kafka](https://kafka.apache.org) cluster is actually usable, not just up.
 
-It creates a dedicated canary topic, produces a message to every partition on a schedule, consumes those messages, and exports Prometheus metrics for produce latency, end-to-end latency, broker connectivity, and error counts.
+It uses or creates a dedicated canary topic, produces a message to every partition on a schedule, consumes those messages, and exports Prometheus metrics for produce latency, end-to-end latency, broker connectivity, and error counts.
 
 Default `KAFKA_VERSION=3.2.0` works on Kafka 3.x and 4.x. That value is the protocol the client speaks; it does not have to match the broker version.
 
@@ -73,12 +73,13 @@ runtime from a JSON file (`DYNAMIC_CONFIG_FILE`).
 | `KAFKA_BOOTSTRAP_BACKOFF_SCALE` | Delay scale between connect attempts (ms) | `5000` | |
 | `TOPIC` | Canary topic | `kafka-canary` | |
 | `TOPIC_CONFIG` | Topic config as `key=value` pairs separated by `;` | empty | |
+| `MANAGE_TOPIC` | Create/alter the canary topic. `false`: topic is pre-created; describe only | `true` | |
 | `RECONCILE_INTERVAL_MS` | Produce/consume interval (ms) | `30000` | |
 | `CLIENT_ID` | Kafka `client.id` (broker logs, Prometheus `clientid` label). Not the consumer group. | `kafka-canary-client` | |
 | `CONSUMER_GROUP_ID` | Kafka consumer group (`group.id`) | `kafka-canary-group` | |
 | `PRODUCER_LATENCY_BUCKETS` | Histogram buckets for produce latency (ms) | `2,5,10,20,50,100,200,400` | |
 | `ENDTOEND_LATENCY_BUCKETS` | Histogram buckets for end-to-end latency (ms) | `5,10,20,50,100,200,400,800` | |
-| `EXPECTED_CLUSTER_SIZE` | Wait for this many brokers before creating the topic; `-1` = dynamic | `-1` | |
+| `EXPECTED_CLUSTER_SIZE` | Wait for this many brokers before creating the topic; `-1` = dynamic. Empty env is `-1`, not `0` | `-1` | |
 | `KAFKA_VERSION` | Kafka protocol the client speaks. Does not have to match the broker version. Default is fine for Kafka 3.x and 4.x. | `3.2.0` | |
 | `SARAMA_LOG_ENABLED` | Enable Sarama client logs | `false` | `saramaLogEnabled` |
 | `SARAMA_PRODUCER_RETRY_MAX` | Sarama produce retries. Canary default is `0` (one shot) | `0` | |
@@ -115,6 +116,8 @@ runtime from a JSON file (`DYNAMIC_CONFIG_FILE`).
 | `PROMETHEUS_CONSTANT_LABELS` | Extra labels on all metrics, `key=value` pairs separated by `;` | empty | |
 
 `OAUTHBEARER` uses the OAuth 2.0 client credentials grant against `SASL_OAUTH_TOKEN_URL`.
+
+`MANAGE_TOPIC=false` is for a pre-created topic: no `CreateTopic`, `AlterConfig`, partition reassignment, or `CreatePartitions`. The process exits if the topic is missing. `EXPECTED_CLUSTER_SIZE` is independent: omit it (default `-1`) unless you want connection checks to pin a fixed broker count.
 
 `SARAMA_*` timeouts are startup-only. `DYNAMIC_CONFIG_FILE` still only flips `saramaLogEnabled` and `verbosityLogLevel` at runtime; changing session timeout there would not recreate the Kafka client. Raising `SARAMA_PRODUCER_RETRY_MAX` hides a single produce failure and folds retries into latency.
 
