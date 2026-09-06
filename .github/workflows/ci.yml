@@ -21,13 +21,13 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.22.2"
+          go-version: "1.26.8"
           cache: true
 
       - name: Test
         env:
           GOTOOLCHAIN: local
-        run: go test ./internal/... -tags=unit_test
+        run: go test ./internal/... ./cmd/... -tags=unit_test
 
       - name: Build
         env:
@@ -43,7 +43,7 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.22.2"
+          go-version: "1.26.8"
           cache: true
 
       - name: Pull Kafka image

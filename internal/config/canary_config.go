@@ -48,7 +48,7 @@ const (
 	StatusTimeWindowEnvVar              = "STATUS_TIME_WINDOW_MS"
 	DynamicConfigFileEnvVar             = "DYNAMIC_CONFIG_FILE"
 	DynamicConfigWatcherIntervalEnvVar  = "DYNAMIC_CONFIG_WATCHER_INTERVAL"
-	ExporterTypeTracing                 = "EXPORTER_TYPE_TRACING" //TODO: This will be removed when Support the OTEL_TRACES_EXPORTER env var is available in the SDK see: https://github.com/open-telemetry/opentelemetry-go/issues/2310
+	TracingEnabledEnvVar                = "TRACING_ENABLED"
 	PrometheusConsantLabelsEnvVar       = "PROMETHEUS_CONSTANT_LABELS"
 	// default values for environment variables
 	BootstrapServersDefault              = "localhost:9092"
@@ -79,7 +79,7 @@ const (
 	StatusTimeWindowDefault              = 300000
 	DynamicConfigFileDefault             = ""
 	DynamicConfigWatcherIntervalDefault  = 30000
-	ExporterTypeTracingDefault           = "" //if empty no tracing for now, possible values : "otlp" or "jaeger"
+	TracingEnabledDefault                = false
 	PrometheusConsantLabelsDefault       = ""
 )
 
@@ -117,7 +117,7 @@ type CanaryConfig struct {
 	StatusCheckInterval           time.Duration
 	StatusTimeWindow              time.Duration
 	DynamicConfigWatcherInterval  time.Duration
-	ExporterTypeTracing           string
+	TracingEnabled                bool
 	PrometheusConstantLabels      prometheus.Labels
 }
 
@@ -183,7 +183,7 @@ func NewCanaryConfig() *CanaryConfig {
 		StatusTimeWindow:              time.Duration(lookupIntEnv(StatusTimeWindowEnvVar, StatusTimeWindowDefault)),
 		DynamicConfigFile:             lookupStringEnv(DynamicConfigFileEnvVar, DynamicConfigFileDefault),
 		DynamicConfigWatcherInterval:  time.Duration(lookupIntEnv(DynamicConfigWatcherIntervalEnvVar, DynamicConfigWatcherIntervalDefault)),
-		ExporterTypeTracing:           exporterTypeTracing(),
+		TracingEnabled:                lookupBoolEnv(TracingEnabledEnvVar, TracingEnabledDefault),
 		PrometheusConstantLabels:      convertKVPairsToPrometheusLabels(lookupStringEnv(PrometheusConsantLabelsEnvVar, PrometheusConsantLabelsDefault)),
 	}
 	return &config
@@ -298,17 +298,10 @@ func (c CanaryConfig) String() string {
 		"ClientID:%s, ConsumerGroupID:%s, ProducerLatencyBuckets:%v, EndToEndLatencyBuckets:%v, ExpectedClusterSize:%d, KafkaVersion:%s,"+
 		"TLSEnabled:%t, TLSCACert:%s, TLSClientCert:%s, TLSClientKey:%s, TLSInsecureSkipVerify:%t,"+
 		"SASLMechanism:%s, SASLUser:%s, SASLPassword:%s, ConnectionCheckInterval:%d ms, ConnectionCheckLatencyBuckets:%v, StatusCheckInterval:%d ms, StatusTimeWindow:%d ms,"+
-		"DynamicConfigFile: %s, DynamicCanaryConfig: %s, DynamicConfigWatcherInterval: %d ms}",
+		"DynamicConfigFile: %s, DynamicCanaryConfig: %s, DynamicConfigWatcherInterval: %d ms, TracingEnabled:%t}",
 		c.BootstrapServers, c.BootstrapBackoffMaxAttempts, c.BootstrapBackoffScale, c.Topic, c.TopicConfig, c.ReconcileInterval, c.ClientID, c.ConsumerGroupID,
 		c.ProducerLatencyBuckets, c.EndToEndLatencyBuckets, c.ExpectedClusterSize, c.KafkaVersion,
 		c.TLSEnabled, TLSCACert, TLSClientCert, TLSClientKey, c.TLSInsecureSkipVerify, c.SASLMechanism, SASLUser, SASLPassword,
 		c.ConnectionCheckInterval, c.ConnectionCheckLatencyBuckets, c.StatusCheckInterval, c.StatusTimeWindow,
-		c.DynamicConfigFile, c.DynamicCanaryConfig, c.DynamicConfigWatcherInterval)
-}
-func exporterTypeTracing() string {
-	exporterType := lookupStringEnv(ExporterTypeTracing, ExporterTypeTracingDefault)
-	if exporterType != "jaeger" && exporterType != "otlp" && exporterType != "" {
-		panic(fmt.Errorf("%s env variable possible values are : '' or 'jaeger' or 'otlp'", ExporterTypeTracing))
-	}
-	return exporterType
+		c.DynamicConfigFile, c.DynamicCanaryConfig, c.DynamicConfigWatcherInterval, c.TracingEnabled)
 }

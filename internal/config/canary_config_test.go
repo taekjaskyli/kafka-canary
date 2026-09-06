@@ -51,6 +51,13 @@ func TestConfigDefault(t *testing.T) {
 	assertDurationConfigParameter(c.StatusTimeWindow, StatusTimeWindowDefault, t)
 	prometheusConsantLabelsDefault := convertKVPairsToPrometheusLabels(PrometheusConsantLabelsDefault)
 	assertMapConfigParameter(c.PrometheusConstantLabels, prometheusConsantLabelsDefault, t)
+	assertBoolConfigParameter(c.TracingEnabled, TracingEnabledDefault, t)
+}
+
+func TestTracingEnabled(t *testing.T) {
+	t.Setenv(TracingEnabledEnvVar, "true")
+	c := NewCanaryConfig()
+	assertBoolConfigParameter(c.TracingEnabled, true, t)
 }
 
 func TestConfigCustom(t *testing.T) {

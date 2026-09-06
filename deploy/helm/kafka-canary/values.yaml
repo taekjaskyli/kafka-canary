@@ -121,7 +121,7 @@ env:
   # STATUS_TIME_WINDOW_MS: 300000
   # DYNAMIC_CONFIG_FILE: /secrets/kafka-canary/dynamic.json
   # DYNAMIC_CONFIG_WATCHER_INTERVAL: 30000
-  # EXPORTER_TYPE_TRACING: otlp
+  # TRACING_ENABLED: true
   # PROMETHEUS_CONSTANT_LABELS: "my-label-1=one;my-label-2=two"
 
 # Prometheus Operator. Leave both false to scrape via annotations or a static config.
