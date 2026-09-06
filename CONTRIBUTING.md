@@ -13,9 +13,9 @@ changes under Apache-2.0.
 - **Go 1.22.2.** Set `GOTOOLCHAIN=local` (the Makefile does this) so module
   commands do not upgrade the toolchain.
 - **Tests come with the change.** Unit: `make test`. End-to-end needs Docker
-  Compose v2: `go test ./test/... -tags=e2e` (starts a KRaft broker from
-  `test/compose-kafka.yaml` on host port 9092).
-- **Run the checks before pushing** — `make test`, `make go_build`,
+  Compose v2: `make test_e2e` (starts a KRaft broker from
+  `test/compose-kafka.yaml` on host port 9092). CI runs both.
+- **Run the checks before pushing** — `make test`, `make test_e2e`, `make go_build`,
   `make helm_lint`. CI runs them anyway; running them locally is faster.
 
 ```shell
