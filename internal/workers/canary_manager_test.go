@@ -9,8 +9,8 @@ package workers
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/strimzi/strimzi-canary/internal/config"
-	"github.com/strimzi/strimzi-canary/internal/services"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
+	"github.com/taekjaskyli/kafka-canary/internal/services"
 	"net/http"
 	"reflect"
 	"sync/atomic"

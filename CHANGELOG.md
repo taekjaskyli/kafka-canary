@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 0.8.0
+
+First release of **kafka-canary**, a community-maintained fork of the archived Strimzi Canary.
+
+### Added
+
+* Helm chart (`deploy/helm/kafka-canary`). Upstream shipped Kubernetes YAML only. Install from OCI (`oci://ghcr.io/taekjaskyli/charts/kafka-canary`) or `helm repo add kafka-canary https://taekjaskyli.github.io/kafka-canary`
+* Multi-arch container image: `linux/amd64` and `linux/arm64` (upstream image was amd64-only)
+* `/readiness` is `503` until the first successful produce and consume; `/liveness` stays process-only
+
+### Changed
+
+* Kafka 4 compatibility: IBM Sarama 1.41.3. Upstream 0.6 / 0.7 used Shopify/Sarama, which Kafka 4 rejects
+* Product rename: module `github.com/taekjaskyli/kafka-canary`, binary `kafka-canary`, image `ghcr.io/taekjaskyli/kafka-canary`
+* Prometheus namespace `kafka_canary`; default topic `kafka-canary`; consumer group `kafka-canary-group`; client id `kafka-canary-client`
+
 ## 0.7.0
 
 * Upgraded from go 1.19 to 1.22

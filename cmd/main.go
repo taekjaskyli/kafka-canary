@@ -21,16 +21,16 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
-	"github.com/strimzi/strimzi-canary/internal/config"
-	"github.com/strimzi/strimzi-canary/internal/security"
-	"github.com/strimzi/strimzi-canary/internal/servers"
-	"github.com/strimzi/strimzi-canary/internal/services"
-	"github.com/strimzi/strimzi-canary/internal/workers"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
+	"github.com/taekjaskyli/kafka-canary/internal/security"
+	"github.com/taekjaskyli/kafka-canary/internal/servers"
+	"github.com/taekjaskyli/kafka-canary/internal/services"
+	"github.com/taekjaskyli/kafka-canary/internal/workers"
 )
 
 var (
@@ -38,7 +38,7 @@ var (
 
 	clientCreationFailed = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:      "client_creation_error_total",
-		Namespace: "strimzi_canary",
+		Namespace: "kafka_canary",
 		Help:      "Total number of errors while creating Sarama client",
 	}, nil)
 )
@@ -94,7 +94,7 @@ func main() {
 
 	applyDynamicConfig(&canaryConfig.DynamicCanaryConfig)
 
-	glog.Infof("Starting Strimzi canary tool [%s] with config: %+v", version, canaryConfig)
+	glog.Infof("Starting Kafka canary [%s] with config: %+v", version, canaryConfig)
 
 	tp := initTracerProvider(canaryConfig.ExporterTypeTracing)
 	defer func() {
@@ -147,7 +147,7 @@ func main() {
 	_ = producerClient.Close()
 	_ = consumerClient.Close()
 
-	glog.Infof("Strimzi canary stopped")
+	glog.Infof("Kafka canary stopped")
 }
 
 func createSaramaConfig(canaryConfig *config.CanaryConfig) (*sarama.Config, error) {

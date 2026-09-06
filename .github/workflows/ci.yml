@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Go test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.22.2"
+          cache: true
+
+      - name: Test
+        env:
+          GOTOOLCHAIN: local
+        run: go test ./internal/... -tags=unit_test
+
+      - name: Build
+        env:
+          GOTOOLCHAIN: local
+        run: go build -o /tmp/kafka-canary ./cmd/
+
+  helm:
+    name: Helm lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/setup-helm@v5
+        with:
+          version: v3.16.3
+      - name: Lint chart
+        run: helm lint deploy/helm/kafka-canary
+      - name: Template chart
+        run: helm template kafka-canary deploy/helm/kafka-canary > /tmp/kafka-canary.yaml
+
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          build-args: |
+            VERSION=${{ github.sha }}
+          tags: kafka-canary:ci

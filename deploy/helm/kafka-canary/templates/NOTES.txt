@@ -1,0 +1,9 @@
+1. Metrics: port-forward the pod, then open http://127.0.0.1:8080/metrics
+
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "kafka-canary.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:{{ .Values.service.port }}
+
+Bootstrap servers: {{ index .Values.env "KAFKA_BOOTSTRAP_SERVERS" | default "localhost:9092" }}
+Topic: {{ index .Values.env "TOPIC" | default "kafka-canary" }}
+Consumer group: {{ index .Values.env "CONSUMER_GROUP_ID" | default "kafka-canary-group" }}
+Image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}

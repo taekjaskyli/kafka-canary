@@ -1,0 +1,16 @@
+# Single-node KRaft broker for e2e tests.
+# Pattern from https://github.com/scholzj/strimzi-compose-up (Strimzi Kafka images).
+# Kafka 4.x has no ZooKeeper; format --standalone is the current storage bootstrap.
+services:
+  kafka:
+    image: quay.io/strimzi/kafka:1.2.0-kafka-4.3.1
+    command:
+      [
+        "sh",
+        "-c",
+        "./bin/kafka-storage.sh format --standalone -t $$(./bin/kafka-storage.sh random-uuid) -c ./config/server.properties && ./bin/kafka-server-start.sh ./config/server.properties",
+      ]
+    ports:
+      - "9092:9092"
+    environment:
+      LOG_DIR: "/tmp/logs"

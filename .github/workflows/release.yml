@@ -1,0 +1,155 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-*"
+
+permissions:
+  contents: write
+  packages: write
+  security-events: write
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set version
+        id: version
+        run: echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Release notes from CHANGELOG
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          awk -v tag="$TAG" '
+            $0 == "## " tag { p=1; next }
+            p && /^## / { exit }
+            p { print }
+          ' CHANGELOG.md > /tmp/release-notes.md
+          if [ ! -s /tmp/release-notes.md ]; then
+            echo "::error::CHANGELOG.md has no '## ${TAG}' section. Add it before tagging."
+            exit 1
+          fi
+          {
+            echo
+            echo "### Packages"
+            echo
+            echo "* Image: \`ghcr.io/${{ github.repository }}:${TAG}\`"
+            echo "* Helm: \`oci://ghcr.io/${{ github.repository_owner }}/charts/kafka-canary:${TAG}\` (https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }})"
+          } >> /tmp/release-notes.md
+
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v6
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=match,pattern=^([0-9].+)$,group=1
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            VERSION=${{ steps.version.outputs.tag }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - uses: azure/setup-helm@v5
+        with:
+          version: v3.16.3
+
+      - name: Package Helm chart
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          CHART=deploy/helm/kafka-canary
+          mkdir -p dist helm-repo
+          helm package "${CHART}" --version "${TAG}" --app-version "${TAG}" --destination dist
+
+      - name: Push Helm chart to GHCR (OCI)
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          helm push "dist/kafka-canary-${TAG}.tgz" "oci://ghcr.io/${{ github.repository_owner }}/charts"
+
+      - name: Build Helm repository (GitHub Pages)
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.version.outputs.tag }}"
+          PAGES_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          mkdir -p helm-repo
+          if git fetch origin gh-pages --depth=1 && git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git archive origin/gh-pages | tar -x -C helm-repo
+          fi
+          cp "dist/kafka-canary-${TAG}.tgz" helm-repo/
+          helm repo index helm-repo --url "${PAGES_URL}"
+          touch helm-repo/.nojekyll
+          {
+            echo "# kafka-canary Helm repository"
+            echo
+            echo '```'
+            echo "helm repo add kafka-canary ${PAGES_URL}"
+            echo "helm repo update"
+            echo "helm install kafka-canary kafka-canary/kafka-canary"
+            echo '```'
+          } > helm-repo/README.md
+          {
+            echo '<!DOCTYPE html>'
+            echo '<html lang="en"><head><meta charset="utf-8"><title>kafka-canary Helm repository</title></head><body>'
+            echo '<h1>kafka-canary Helm repository</h1>'
+            echo '<pre>'
+            echo "helm repo add kafka-canary ${PAGES_URL}"
+            echo "helm repo update"
+            echo "helm install kafka-canary kafka-canary/kafka-canary"
+            echo '</pre></body></html>'
+          } > helm-repo/index.html
+
+      - name: Publish Helm repository to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4.1.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./helm-repo
+          keep_files: false
+
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          body_path: /tmp/release-notes.md
+          files: |
+            dist/*
+
+      - name: Trivy image scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        continue-on-error: true
+        with:
+          image-ref: ghcr.io/${{ github.repository }}:${{ steps.version.outputs.tag }}
+          format: sarif
+          output: trivy-image.sarif
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        continue-on-error: true
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image

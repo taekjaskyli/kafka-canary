@@ -11,12 +11,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/strimzi/strimzi-canary/internal/config"
-	"github.com/strimzi/strimzi-canary/internal/util"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
+	"github.com/taekjaskyli/kafka-canary/internal/util"
 )
 
 var (
@@ -44,21 +44,21 @@ func NewConnectionService(canaryConfig *config.CanaryConfig, saramaConfig *saram
 
 	deprecatedConnectionError = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "connection_error_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Total number of errors while checking the connection to Kafka brokers",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"brokerid", "connected"})
 
 	connection = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "connection_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Total number of connections to Kafka brokers (connection may have succeeded or failed)",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"brokerid", "connected"})
 
 	connectionLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:        "connection_latency",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Latency in milliseconds for established or failed connections",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 		Buckets:     canaryConfig.ConnectionCheckLatencyBuckets,
@@ -143,7 +143,7 @@ func (cs *connectionService) connectionCheck() {
 		if err != nil {
 			if util.IsDisconnection(err) {
 				// Kafka brokers close connection to the admin client not able to recover
-				// Sarama issues: https://github.com/Shopify/sarama/issues/2042, https://github.com/Shopify/sarama/issues/1796
+				// Sarama issues: https://github.com/IBM/sarama/issues/2042, https://github.com/IBM/sarama/issues/1796
 				// Workaround closing the admin client and the reopen on next connection check
 				if err := cs.admin.Close(); err != nil {
 					glog.Fatalf("Error closing the Sarama cluster admin: %v", err)

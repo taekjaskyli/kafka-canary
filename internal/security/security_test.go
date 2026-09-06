@@ -13,7 +13,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/strimzi/strimzi-canary/internal/config"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
 )
 
 func TestSystemCertsPool(t *testing.T) {

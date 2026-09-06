@@ -12,14 +12,14 @@ import (
 	"time"
 )
 
-type  DynamicConfigWatcher struct {
+type DynamicConfigWatcher struct {
 	exists bool
 	hash   string
 	closer sync.Once
 	quit   chan struct{}
 }
 
-func NewDynamicConfigWatcher(canaryConfig *CanaryConfig, applyFunc func(config *DynamicCanaryConfig), defaultFunc func() (*DynamicCanaryConfig)) (*DynamicConfigWatcher, error) {
+func NewDynamicConfigWatcher(canaryConfig *CanaryConfig, applyFunc func(config *DynamicCanaryConfig), defaultFunc func() *DynamicCanaryConfig) (*DynamicConfigWatcher, error) {
 	dynamicConfigWatcher := &DynamicConfigWatcher{
 		quit: make(chan struct{}),
 	}
@@ -39,7 +39,7 @@ func NewDynamicConfigWatcher(canaryConfig *CanaryConfig, applyFunc func(config *
 			ticker := time.NewTicker(canaryConfig.DynamicConfigWatcherInterval * time.Millisecond)
 			for {
 				select {
-				case <- ticker.C:
+				case <-ticker.C:
 					if _, err := os.Stat(canaryConfig.DynamicConfigFile); err == nil {
 						dynamicConfigWatcher.exists = true
 						target, hsh, err := readAndHash(canaryConfig.DynamicConfigFile)
@@ -56,7 +56,7 @@ func NewDynamicConfigWatcher(canaryConfig *CanaryConfig, applyFunc func(config *
 						dynamicConfigWatcher.exists = false
 						applyFunc(defaultFunc())
 					}
-				case <- dynamicConfigWatcher.quit:
+				case <-dynamicConfigWatcher.quit:
 					ticker.Stop()
 					return
 				}
@@ -67,7 +67,7 @@ func NewDynamicConfigWatcher(canaryConfig *CanaryConfig, applyFunc func(config *
 	return dynamicConfigWatcher, nil
 }
 
-func (c *DynamicConfigWatcher) Close()  {
+func (c *DynamicConfigWatcher) Close() {
 	c.closer.Do(func() {
 		close(c.quit)
 	})
@@ -89,6 +89,6 @@ func readAndHash(filename string) (target *DynamicCanaryConfig, h string, err er
 	if err != nil {
 		return
 	}
-	h =  hex.EncodeToString(hasher.Sum(nil))
+	h = hex.EncodeToString(hasher.Sum(nil))
 	return
 }

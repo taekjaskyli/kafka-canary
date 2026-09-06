@@ -13,12 +13,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/strimzi/strimzi-canary/internal/config"
-	"github.com/strimzi/strimzi-canary/internal/util"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
+	"github.com/taekjaskyli/kafka-canary/internal/util"
 )
 
 // TopicReconcileResult contains the result of a topic reconcile
@@ -65,35 +65,35 @@ func NewTopicService(canaryConfig *config.CanaryConfig, saramaConfig *sarama.Con
 
 	topicCreationFailed = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "topic_creation_failed_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Total number of errors while creating the canary topic",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"topic"})
 
 	describeClusterError = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "topic_describe_cluster_error_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Total number of errors while describing cluster",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, nil)
 
 	describeTopicError = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "topic_describe_error_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Total number of errors while getting canary topic metadata",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"topic"})
 
 	alterTopicAssignmentsError = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "topic_alter_assignments_error_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Total number of errors while altering partitions assignments for the canary topic",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"topic"})
 
 	alterTopicConfigurationError = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "topic_alter_configuration_error_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Total number of errors while altering configuration for the canary topic",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"topic"})
@@ -124,7 +124,7 @@ func (ts *topicService) Reconcile() (TopicReconcileResult, error) {
 	result, err := ts.reconcileTopic()
 	if err != nil && util.IsDisconnection(err) {
 		// Kafka brokers close connection to the topic service admin client not able to recover
-		// Sarama issues: https://github.com/Shopify/sarama/issues/2042, https://github.com/Shopify/sarama/issues/1796
+		// Sarama issues: https://github.com/IBM/sarama/issues/2042, https://github.com/IBM/sarama/issues/1796
 		// Workaround closing the topic service with its admin client and then reopen on next reconcile
 		ts.Close()
 	}

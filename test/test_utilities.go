@@ -3,6 +3,8 @@
 // License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
 //
 
+//go:build e2e
+
 package test
 
 import (
@@ -10,7 +12,7 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 )
 
 type ExampleConsumerGroupHandler struct {
@@ -69,7 +71,7 @@ func parseSucReqRateFromMetrics(input string) string {
 
 // get total number of produced records for canary test topic
 func parseCanaryRecordsProducedFromMetrics(input string) string {
-	regex, _ := regexp.Compile(`(?m)^.*strimzi_canary_records_produced_total\S*\s(\d+)$`)
+	regex, _ := regexp.Compile(`(?m)^.*kafka_canary_records_produced_total\S*\s(\d+)$`)
 	data := regex.FindStringSubmatch(input)
 	if len(data) > 1 {
 		return data[1]

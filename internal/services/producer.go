@@ -10,16 +10,16 @@ import (
 	"context"
 	"strconv"
 
-	"go.opentelemetry.io/contrib/instrumentation/github.com/Shopify/sarama/otelsarama"
 	"go.opentelemetry.io/otel"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/taekjaskyli/kafka-canary/internal/otelsarama"
 
-	"github.com/strimzi/strimzi-canary/internal/config"
-	"github.com/strimzi/strimzi-canary/internal/util"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
+	"github.com/taekjaskyli/kafka-canary/internal/util"
 )
 
 var (
@@ -50,21 +50,21 @@ func NewProducerService(canaryConfig *config.CanaryConfig, client sarama.Client)
 
 	recordsProduced = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "records_produced_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "The total number of records produced",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"clientid", "partition"})
 
 	recordsProducedFailed = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "records_produced_failed_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "The total number of records failed to produce",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"clientid", "partition"})
 
 	recordsProducedLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:        "records_produced_latency",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Records produced latency in milliseconds",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 		Buckets:     canaryConfig.ProducerLatencyBuckets,
@@ -72,7 +72,7 @@ func NewProducerService(canaryConfig *config.CanaryConfig, client sarama.Client)
 
 	refreshProducerMetadataError = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "producer_refresh_metadata_error_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Total number of errors while refreshing producer metadata",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"clientid"})
@@ -126,6 +126,7 @@ func (ps *producerService) Send(partitionsAssignments map[int32][]int32) {
 			glog.V(1).Infof("Message sent: partition=%d, offset=%d, duration=%d ms", partition, offset, duration)
 			recordsProducedLatency.With(labels).Observe(float64(duration))
 			recordsProducedFailed.With(labels).Add(0)
+			MarkProducedOK()
 		}
 	}
 }

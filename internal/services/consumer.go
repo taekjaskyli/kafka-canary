@@ -11,18 +11,18 @@ import (
 	"strconv"
 	"time"
 
-	"go.opentelemetry.io/contrib/instrumentation/github.com/Shopify/sarama/otelsarama"
 	"go.opentelemetry.io/otel"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/taekjaskyli/kafka-canary/internal/otelsarama"
 
-	"github.com/strimzi/strimzi-canary/internal/config"
-	"github.com/strimzi/strimzi-canary/internal/util"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
+	"github.com/taekjaskyli/kafka-canary/internal/util"
 )
 
 const (
@@ -66,21 +66,21 @@ func NewConsumerService(canaryConfig *config.CanaryConfig, client sarama.Client)
 
 	recordsConsumed = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "records_consumed_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "The total number of records consumed",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"clientid", "partition"})
 
 	recordsConsumerFailed = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "consumer_error_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Total number of errors reported by the consumer",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"clientid"})
 
 	recordsEndToEndLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:        "records_consumed_latency",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Records end-to-end latency in milliseconds",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 		Buckets:     canaryConfig.EndToEndLatencyBuckets,
@@ -88,14 +88,14 @@ func NewConsumerService(canaryConfig *config.CanaryConfig, client sarama.Client)
 
 	timeoutJoinGroup = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "consumer_timeout_join_group_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "The total number of consumers not joining the group within the timeout",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"clientid"})
 
 	refreshConsumerMetadataError = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "consumer_refresh_metadata_error_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Total number of errors while refreshing consumer metadata",
 		ConstLabels: canaryConfig.PrometheusConstantLabels,
 	}, []string{"clientid"})
@@ -283,6 +283,7 @@ func (cgh *consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSessio
 		recordsEndToEndLatency.With(labels).Observe(float64(duration))
 		recordsConsumed.With(labels).Inc()
 		RecordsConsumedCounter++
+		MarkConsumedOK()
 	}
 	return nil
 }

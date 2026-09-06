@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 )
 
 const (
@@ -77,7 +77,7 @@ func TestCanaryTopicLiveness(t *testing.T) {
 		// set up client for getting partition count on canary topic
 		consumingHandler.partitionsConsumptionSlice = make([]bool, topicPartitionCount)
 
-		// set up consumer group's consumingHandler for Strimzi canary topic
+		// set up consumer group's consumingHandler for the canary topic
 		topicsToConsume := []string{serviceManager.TopicTestName}
 
 		// group.Consume is blocking
@@ -97,6 +97,22 @@ func TestCanaryTopicLiveness(t *testing.T) {
 	close(errs)
 }
 
+func waitUntilReady(t *testing.T) {
+	t.Helper()
+	deadline := time.Now().Add(60 * time.Second)
+	for time.Now().Before(deadline) {
+		resp, err := http.Get(httpUrlPrefix + "/readiness")
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				return
+			}
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+	t.Fatal("timed out waiting for /readiness")
+}
+
 func TestEndpointsAvailability(t *testing.T) {
 	log.Println("TestEndpointsAvailability test starts")
 
@@ -110,11 +126,13 @@ func TestEndpointsAvailability(t *testing.T) {
 		{"/invalid", 404},
 	}
 
+	waitUntilReady(t)
+
 	for _, testInput := range testInputs {
 		var completeUrl = httpUrlPrefix + testInput.endpoint
 		resp, err := http.Get(completeUrl)
 		if err != nil {
-			t.Fatalf("Http server unreachable for url: %s", completeUrl)
+			t.Fatalf("Http server unreachable for url %s: %v", completeUrl, err)
 		}
 
 		wantResponseStatus := testInput.expectedStatusCode
@@ -132,12 +150,12 @@ func TestMetricServerPrometheusContent(t *testing.T) {
 
 	resp, err := http.Get(httpUrlPrefix + metricsEndpoint)
 	if err != nil {
-		t.Fatalf("Failed to get response 1")
+		t.Fatalf("Failed to get response 1: %v", err)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		t.Fatalf("Failed to get response 1 body")
+		t.Fatalf("Failed to get response 1 body: %v", err)
 	}
 	totalRequestCountT1, _ := strconv.Atoi(parseSucReqRateFromMetrics(string(body)))
 	if totalRequestCountT1 < 1 {
@@ -146,12 +164,12 @@ func TestMetricServerPrometheusContent(t *testing.T) {
 
 	resp2, err := http.Get(httpUrlPrefix + metricsEndpoint)
 	if err != nil {
-		t.Fatalf("Failed to get response 2")
+		t.Fatalf("Failed to get response 2: %v", err)
 	}
 	defer resp2.Body.Close()
 	body2, err := io.ReadAll(resp2.Body)
 	if err != nil {
-		t.Fatalf("Failed to get response 2 body")
+		t.Fatalf("Failed to get response 2 body: %v", err)
 	}
 
 	// totalRequestCountT2 stores value produced after defined number of seconds from obtaining totalRequestCountT1
@@ -172,13 +190,13 @@ func TestMetricServerCanaryContent(t *testing.T) {
 	log.Println("TestMetricServerCanaryContent getting response 1")
 	resp, err := http.Get(httpUrlPrefix + metricsEndpoint)
 	if err != nil {
-		t.Fatalf("Failed to get response 1")
+		t.Fatalf("Failed to get response 1: %v", err)
 	}
 	defer resp.Body.Close()
 	log.Println("TestMetricServerCanaryContent getting response 1 body")
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		t.Fatalf("Failed to read response 1 body")
+		t.Fatalf("Failed to read response 1 body: %v", err)
 	}
 	log.Println("TestMetricServerCanaryContent parsing response 1 body")
 	totalProducedRecordsCount, err := strconv.Atoi(parseCanaryRecordsProducedFromMetrics(string(body)))
@@ -193,13 +211,13 @@ func TestMetricServerCanaryContent(t *testing.T) {
 	log.Println("TestMetricServerCanaryContent getting response 2")
 	resp2, err := http.Get(httpUrlPrefix + metricsEndpoint)
 	if err != nil {
-		t.Fatalf("Failed to get response 2")
+		t.Fatalf("Failed to get response 2: %v", err)
 	}
 	defer resp2.Body.Close()
 	log.Println("TestMetricServerCanaryContent getting response 2 body")
 	body2, err := io.ReadAll(resp2.Body)
 	if err != nil {
-		t.Fatalf("Failed to read response 2 body")
+		t.Fatalf("Failed to read response 2 body: %v", err)
 	}
 
 	log.Println("TestMetricServerCanaryContent parsing response 2 body")

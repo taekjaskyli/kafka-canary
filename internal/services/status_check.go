@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/strimzi/strimzi-canary/internal/config"
-	"github.com/strimzi/strimzi-canary/internal/util"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
+	"github.com/taekjaskyli/kafka-canary/internal/util"
 )
 
 // Status defines useful status related information

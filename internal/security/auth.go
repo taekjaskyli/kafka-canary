@@ -10,8 +10,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Shopify/sarama"
-	"github.com/strimzi/strimzi-canary/internal/config"
+	"github.com/IBM/sarama"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
 )
 
 func SetAuthConfig(canaryConfig *config.CanaryConfig, saramaConfig *sarama.Config) error {

@@ -13,7 +13,7 @@ import (
 	"os"
 
 	"github.com/golang/glog"
-	"github.com/strimzi/strimzi-canary/internal/config"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
 )
 
 func NewTLSConfig(canaryConfig *config.CanaryConfig) (*tls.Config, error) {

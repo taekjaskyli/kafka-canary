@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Shopify/sarama"
+	"github.com/IBM/sarama"
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -54,11 +54,11 @@ const (
 	BootstrapServersDefault              = "localhost:9092"
 	BootstrapBackoffMaxAttemptsDefault   = 10
 	BootstrapBackoffScaleDefault         = 5000
-	TopicDefault                         = "__strimzi_canary"
+	TopicDefault                         = "kafka-canary"
 	TopicConfigDefault                   = ""
 	ReconcileIntervalDefault             = 30000
-	ClientIDDefault                      = "strimzi-canary-client"
-	ConsumerGroupIDDefault               = "strimzi-canary-group"
+	ClientIDDefault                      = "kafka-canary-client"
+	ConsumerGroupIDDefault               = "kafka-canary-group"
 	ProducerLatencyBucketsDefault        = "2,5,10,20,50,100,200,400"
 	EndToEndLatencyBucketsDefault        = "5,10,20,50,100,200,400,800"
 	ExpectedClusterSizeDefault           = -1 // "dynamic" reassignment is enabled

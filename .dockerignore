@@ -1,0 +1,11 @@
+.git
+.github
+**/*_test.go
+*.md
+deploy
+tools
+test
+LICENSE
+CHANGELOG.md
+Makefile*
+**/.DS_Store

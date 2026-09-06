@@ -13,7 +13,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/strimzi/strimzi-canary/internal/services"
+	"github.com/taekjaskyli/kafka-canary/internal/services"
 )
 
 // HttpServer exposes some services over HTTP (i.e. Prometheus metrics, healthchecks)

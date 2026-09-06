@@ -14,16 +14,18 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
-	"github.com/Shopify/sarama"
-	"github.com/strimzi/strimzi-canary/internal/config"
+	"github.com/IBM/sarama"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
 )
 
 // Implementation of Service Manager
 type ServiceManager struct {
 	CanaryConfig
 	Paths
+	canaryCmd *exec.Cmd
 }
 
 // Configurations of canary that is manipulated in e2e tests
@@ -33,45 +35,35 @@ type CanaryConfig struct {
 	KafkaBrokerAddress    string
 }
 
-// paths to services ( kafka zookeeper docker compose, and Canary application main method)
+// paths to services (Kafka Compose file and Canary application main method)
 type Paths struct {
-	pathDockerComposeKafkaZookeeper string
-	pathToCanaryMain                string
+	pathDockerComposeKafka string
+	pathToCanaryMain       string
 }
 
 const (
-	canaryTestTopicName         = "__strimzi_canary_test_topicv123"
+	canaryTestTopicName         = "kafka-canary-test"
 	kafkaBrokerAddress          = "127.0.0.1:9092"
 	canaryReconcileIntervalTime = "1000"
 
-	pathToDockerComposeImage = "compose-kafka-zookeeper.yaml"
+	pathToDockerComposeImage = "compose-kafka.yaml"
 	pathToMainMethod         = "../cmd/main.go"
 )
 
-func (c *ServiceManager) StartKafkaZookeeperContainers() {
-	log.Println("Starting kafka & Zookeeper")
+func (c *ServiceManager) StartKafkaBroker() {
+	log.Println("Starting Kafka")
 
-	errComposingContainers := c.executeCmdWithLogging(
-		"start kafka and Zookeeper containers using docker-compose",
-		"docker-compose",
-		"-f", c.pathDockerComposeKafkaZookeeper, "up", "-d",
-	)
-
+	errComposingContainers := c.dockerCompose("start Kafka broker using docker compose", "up", "-d")
 	if errComposingContainers != nil {
 		log.Fatal(errComposingContainers.Error())
 	}
-	log.Println("Zookeeper and Kafka containers created")
-	// after creation of containers we still have to wait for some time before successful communication with Kafka & Zookeper
+	log.Println("Kafka container created")
 	c.waitForBroker()
 }
 
-func (c *ServiceManager) StopKafkaZookeeperContainers() {
-	log.Println("Stopping kafka & Zookeeper")
-	errStoppingContainers := c.executeCmdWithLogging(
-		"stop kafka and Zookeeper containers using docker-compose",
-		"docker-compose",
-		"-f", c.pathDockerComposeKafkaZookeeper, "down",
-	)
+func (c *ServiceManager) StopKafkaBroker() {
+	log.Println("Stopping Kafka")
+	errStoppingContainers := c.dockerCompose("stop Kafka broker using docker compose", "down")
 	if errStoppingContainers != nil {
 		log.Fatal(errStoppingContainers.Error())
 	}
@@ -83,7 +75,7 @@ func CreateManager() *ServiceManager {
 	manager.ReconcileIntervalTime = canaryReconcileIntervalTime
 	manager.TopicTestName = canaryTestTopicName
 	manager.pathToCanaryMain = pathToMainMethod
-	manager.pathDockerComposeKafkaZookeeper = pathToDockerComposeImage
+	manager.pathDockerComposeKafka = pathToDockerComposeImage
 	manager.KafkaBrokerAddress = kafkaBrokerAddress
 	return manager
 }
@@ -94,38 +86,59 @@ func (c *ServiceManager) StartCanary() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	myCmd := exec.Command("go", "run", c.pathToCanaryMain)
+	c.canaryCmd = exec.Command("go", "run", c.pathToCanaryMain)
+	c.canaryCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 
-	stderr, err := myCmd.StderrPipe()
+	stderr, err := c.canaryCmd.StderrPipe()
 	if err != nil {
 		log.Fatalf("could not get stderr pipe: %v", err)
 	}
-	stdout, err := myCmd.StdoutPipe()
+	stdout, err := c.canaryCmd.StdoutPipe()
 	if err != nil {
 		log.Fatalf("could not get stdout pipe: %v", err)
 	}
 
+	var readyOnce sync.Once
 	go func() {
 		merged := io.MultiReader(stderr, stdout)
 		scanner := bufio.NewScanner(merged)
 		for scanner.Scan() {
 			msg := scanner.Text()
+			log.Println("[canary]", msg)
 			if strings.Contains(msg, "Starting canary manager") {
-				wg.Done()
-				return
+				readyOnce.Do(wg.Done)
 			}
 		}
 	}()
 
-	if err := myCmd.Start(); err != nil {
+	if err := c.canaryCmd.Start(); err != nil {
 		log.Fatal(err.Error())
 	}
 
 	if waitTimeout(&wg, time.Second*30) {
-		_ = myCmd.Process.Kill()
+		c.StopCanary()
 		log.Fatal("canary failed to start within allowed time")
 	}
 	log.Println("Canary is ready")
+}
+
+func (c *ServiceManager) StopCanary() {
+	if c.canaryCmd == nil || c.canaryCmd.Process == nil {
+		return
+	}
+	log.Println("Stopping Canary")
+	_ = syscall.Kill(-c.canaryCmd.Process.Pid, syscall.SIGTERM)
+	done := make(chan struct{})
+	go func() {
+		_, _ = c.canaryCmd.Process.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		_ = syscall.Kill(-c.canaryCmd.Process.Pid, syscall.SIGKILL)
+		_, _ = c.canaryCmd.Process.Wait()
+	}
 }
 
 // per se it means waiting for container's broker to communicate correctly
@@ -154,19 +167,20 @@ func (c *ServiceManager) waitForBroker() {
 	select {
 	case <-timeout:
 		log.Println("Broker isn't ready within expected timeout")
-		errObtainingLogs := c.executeCmdWithLogging(
-			"obtain logs from zookeeper and kafka containers",
-			"docker-compose",
-			"-f", pathToDockerComposeImage, "logs",
-		)
+		errObtainingLogs := c.dockerCompose("obtain logs from Kafka container", "logs")
 		if errObtainingLogs != nil {
-			log.Println("Problem obtaining logs from kafka and zookeeper containers")
+			log.Println("Problem obtaining logs from Kafka container")
 			log.Fatal(errObtainingLogs.Error())
 		}
 		log.Fatal("containers are not in suitable state")
 	case <-brokerIsReadyChannel:
 		log.Println("Container (Broker) is ready")
 	}
+}
+
+func (c *ServiceManager) dockerCompose(commandDescription string, composeArgs ...string) error {
+	args := append([]string{"compose", "-f", c.pathDockerComposeKafka}, composeArgs...)
+	return c.executeCmdWithLogging(commandDescription, "docker", args...)
 }
 
 func (c *ServiceManager) executeCmdWithLogging(commandDescription, commandName string, commandArgs ...string) error {
@@ -178,7 +192,7 @@ func (c *ServiceManager) executeCmdWithLogging(commandDescription, commandName s
 	cmd.Stderr = &stderr
 	// execute command
 	err := cmd.Run()
-	// log Stdout Stderr from command (stored within buffer)
+	// log Stdout and Stderr from command (stored within buffer)
 	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
 	log.Printf("cmd description: %s\n", commandDescription)
 	log.Printf("execute cmd: %s %s\n", commandName, strings.Join(commandArgs, " "))

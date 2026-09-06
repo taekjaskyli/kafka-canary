@@ -1,0 +1,142 @@
+# Image. Empty tag uses Chart.appVersion (0.8.0).
+image:
+  repository: ghcr.io/taekjaskyli/kafka-canary
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+# Distroless nonroot is uid/gid 65532. Keep these in sync with the image USER.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 64Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+
+# /liveness: process up (does not check Kafka).
+# /readiness: 503 until first successful produce and consume, then OK for the rest of the process lifetime.
+livenessProbe:
+  httpGet:
+    path: /liveness
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 30
+readinessProbe:
+  httpGet:
+    path: /readiness
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 30
+
+# TLS files from a Secret. Pair with TLS_* path env vars below.
+volumes: []
+  # - name: tls
+  #   secret:
+  #     secretName: my-kafka-user
+
+volumeMounts: []
+  # - name: tls
+  #   mountPath: /secrets/kafka-canary
+  #   readOnly: true
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Secret refs (PEM or SASL). Appended after `env`. Examples: chart README.
+extraEnv: []
+  # - name: TLS_CA_CERT
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: my-kafka-user
+  #       key: ca.crt
+  # - name: SASL_PASSWORD
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: my-kafka-user
+  #       key: password
+extraEnvFrom: []
+
+# Canary settings. Only bootstrap is set by default; omit a key to use the binary default.
+# Names and defaults: project README Configuration. TLS/SASL examples: chart README.
+env:
+  KAFKA_BOOTSTRAP_SERVERS: my-cluster-kafka-bootstrap:9092
+  # KAFKA_BOOTSTRAP_BACKOFF_MAX_ATTEMPTS: 10
+  # KAFKA_BOOTSTRAP_BACKOFF_SCALE: 5000
+  # TOPIC: kafka-canary
+  # TOPIC_CONFIG: "retention.ms=600000;segment.bytes=16384"
+  # RECONCILE_INTERVAL_MS: 30000
+  # CLIENT_ID: kafka-canary-client
+  # CONSUMER_GROUP_ID: kafka-canary-group
+  # PRODUCER_LATENCY_BUCKETS: "2,5,10,20,50,100,200,400"
+  # ENDTOEND_LATENCY_BUCKETS: "5,10,20,50,100,200,400,800"
+  # EXPECTED_CLUSTER_SIZE: -1
+  # KAFKA_VERSION: "3.2.0"
+  # SARAMA_LOG_ENABLED: false
+  # VERBOSITY_LOG_LEVEL: 0
+  # TLS_ENABLED: true
+  # TLS_CA_CERT: /secrets/kafka-canary/ca.crt
+  # TLS_CLIENT_CERT: /secrets/kafka-canary/tls.crt
+  # TLS_CLIENT_KEY: /secrets/kafka-canary/tls.key
+  # TLS_INSECURE_SKIP_VERIFY: false
+  # SASL_MECHANISM: SCRAM-SHA-512
+  # CONNECTION_CHECK_INTERVAL_MS: 120000
+  # CONNECTION_CHECK_LATENCY_BUCKETS: "100,200,400,800,1600"
+  # STATUS_CHECK_INTERVAL_MS: 30000
+  # STATUS_TIME_WINDOW_MS: 300000
+  # DYNAMIC_CONFIG_FILE: /secrets/kafka-canary/dynamic.json
+  # DYNAMIC_CONFIG_WATCHER_INTERVAL: 30000
+  # EXPORTER_TYPE_TRACING: otlp
+  # PROMETHEUS_CONSTANT_LABELS: "my-label-1=one;my-label-2=two"
+
+# Prometheus Operator. Leave both false to scrape via annotations or a static config.
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}
+  namespace: ""
+  annotations: {}
+
+podMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  labels: {}
+  namespace: ""
+  annotations: {}

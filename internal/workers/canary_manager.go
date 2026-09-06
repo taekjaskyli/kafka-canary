@@ -14,8 +14,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/strimzi/strimzi-canary/internal/config"
-	"github.com/strimzi/strimzi-canary/internal/services"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
+	"github.com/taekjaskyli/kafka-canary/internal/services"
 )
 
 // CanaryManager defines the manager driving the different producer, consumer and topic services
@@ -54,7 +54,7 @@ func NewCanaryManager(canaryConfig *config.CanaryConfig,
 func (cm *CanaryManager) RegisterMetrics() {
 	expectedClusterSizeError = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name:        "expected_cluster_size_error_total",
-		Namespace:   "strimzi_canary",
+		Namespace:   "kafka_canary",
 		Help:        "Total number of errors while waiting the Kafka cluster having the expected size",
 		ConstLabels: cm.canaryConfig.PrometheusConstantLabels,
 	}, nil)

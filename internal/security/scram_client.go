@@ -4,7 +4,7 @@
 //
 
 // code inspired by the SCRAM client provided by the Sarama library at
-// https://github.com/Shopify/sarama/blob/main/examples/sasl_scram_client/scram_client.go
+// https://github.com/IBM/sarama/blob/main/examples/sasl_scram_client/scram_client.go
 
 package security
 

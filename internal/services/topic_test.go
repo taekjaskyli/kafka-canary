@@ -11,8 +11,8 @@ package services
 
 import (
 	"fmt"
-	"github.com/Shopify/sarama"
-	"github.com/strimzi/strimzi-canary/internal/config"
+	"github.com/IBM/sarama"
+	"github.com/taekjaskyli/kafka-canary/internal/config"
 	"math/rand"
 	"reflect"
 	"testing"

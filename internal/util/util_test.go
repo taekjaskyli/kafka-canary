@@ -16,7 +16,7 @@ import (
 
 func TestIsDisconnection(t *testing.T) {
 	cases := []struct {
-		err error
+		err      error
 		expected bool
 	}{
 		{nil, false},
