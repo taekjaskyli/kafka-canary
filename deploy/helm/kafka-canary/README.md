@@ -128,7 +128,8 @@ extraEnv:
 
 ## SASL
 
-Supported mechanisms: `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`.
+Supported mechanisms: `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, `OAUTHBEARER`.
+
 Set `env.SASL_MECHANISM` and take user/password from a Secret:
 
 ```yaml
@@ -145,6 +146,21 @@ extraEnv:
       secretKeyRef:
         name: my-kafka-user
         key: password
+```
+
+`OAUTHBEARER` is OAuth 2.0 client credentials. Put the client secret in a Secret:
+
+```yaml
+env:
+  SASL_MECHANISM: OAUTHBEARER
+  SASL_OAUTH_TOKEN_URL: https://idp.example.com/realms/kafka/protocol/openid-connect/token
+  SASL_OAUTH_CLIENT_ID: kafka-canary
+extraEnv:
+  - name: SASL_OAUTH_CLIENT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: my-kafka-canary-oauth
+        key: client-secret
 ```
 
 ## Prometheus

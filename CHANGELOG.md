@@ -7,6 +7,7 @@ Notes for the next tag. Rewrite this heading to `## 0.9.0` (or whatever the vers
 ### Added
 
 * `MESSAGE_SIZE` (KB). `0` keeps the short JSON; `1` and above set the message value to exactly N×1024 bytes (`payload` fills the rest). Minimum positive value is 1 KB; invalid values warn and use `0`
+* SASL/`OAUTHBEARER` via OAuth 2.0 client credentials (`SASL_MECHANISM=OAUTHBEARER`, `SASL_OAUTH_TOKEN_URL`, `SASL_OAUTH_CLIENT_ID`, `SASL_OAUTH_CLIENT_SECRET`, optional `SASL_OAUTH_SCOPE`)
 
 ### Changed
 

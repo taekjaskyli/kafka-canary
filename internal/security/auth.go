@@ -16,6 +16,10 @@ import (
 
 func SetAuthConfig(canaryConfig *config.CanaryConfig, saramaConfig *sarama.Config) error {
 
+	if canaryConfig.SASLMechanism == sarama.SASLTypeOAuth {
+		return setOAuthConfig(canaryConfig, saramaConfig)
+	}
+
 	if canaryConfig.SASLMechanism == sarama.SASLTypePlaintext ||
 		canaryConfig.SASLMechanism == sarama.SASLTypeSCRAMSHA256 ||
 		canaryConfig.SASLMechanism == sarama.SASLTypeSCRAMSHA512 {

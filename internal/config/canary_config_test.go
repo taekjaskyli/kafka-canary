@@ -44,6 +44,10 @@ func TestConfigDefault(t *testing.T) {
 	assertStringConfigParameter(c.SASLMechanism, SASLMechanismDefault, t)
 	assertStringConfigParameter(c.SASLUser, SASLUserDefault, t)
 	assertStringConfigParameter(c.SASLPassword, SASLPasswordDefault, t)
+	assertStringConfigParameter(c.SASLOAuthTokenURL, SASLOAuthTokenURLDefault, t)
+	assertStringConfigParameter(c.SASLOAuthClientID, SASLOAuthClientIDDefault, t)
+	assertStringConfigParameter(c.SASLOAuthClientSecret, SASLOAuthClientSecretDefault, t)
+	assertStringConfigParameter(c.SASLOAuthScope, SASLOAuthScopeDefault, t)
 	assertDurationConfigParameter(c.ConnectionCheckInterval, ConnectionCheckIntervalDefault, t)
 	connectionCheckLatencyBucketsDefault := latencyBuckets(ConnectionCheckLatencyBucketsDefault)
 	assertBucketsConfigParameter(c.ConnectionCheckLatencyBuckets, connectionCheckLatencyBucketsDefault, t)
@@ -80,6 +84,35 @@ func TestMessageSizeNotIntegerTreatedAsZero(t *testing.T) {
 	t.Setenv(MessageSizeEnvVar, "0.01")
 	c := NewCanaryConfig()
 	assertIntConfigParameter(c.MessageSize, 0, t)
+}
+
+func TestOAuthConfig(t *testing.T) {
+	t.Setenv(SASLOAuthTokenURLEnvVar, "https://idp.example.com/token")
+	t.Setenv(SASLOAuthClientIDEnvVar, "canary")
+	t.Setenv(SASLOAuthClientSecretEnvVar, "s3cret")
+	t.Setenv(SASLOAuthScopeEnvVar, "openid")
+	c := NewCanaryConfig()
+	assertStringConfigParameter(c.SASLOAuthTokenURL, "https://idp.example.com/token", t)
+	assertStringConfigParameter(c.SASLOAuthClientID, "canary", t)
+	assertStringConfigParameter(c.SASLOAuthClientSecret, "s3cret", t)
+	assertStringConfigParameter(c.SASLOAuthScope, "openid", t)
+}
+
+func TestCanaryConfigStringMasksOAuthSecret(t *testing.T) {
+	c := CanaryConfig{
+		SASLMechanism:         "OAUTHBEARER",
+		SASLOAuthTokenURL:     "https://idp.example.com/token",
+		SASLOAuthClientID:     "canary",
+		SASLOAuthClientSecret: "super-secret",
+		SASLOAuthScope:        "openid",
+	}
+	s := c.String()
+	if strings.Contains(s, "super-secret") {
+		t.Fatal("oauth client secret leaked in String()")
+	}
+	if !strings.Contains(s, "[OAuth client secret]") {
+		t.Fatalf("expected masked oauth secret, got %s", s)
+	}
 }
 
 func TestTracingEnabled(t *testing.T) {

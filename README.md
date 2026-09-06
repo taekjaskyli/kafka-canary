@@ -87,9 +87,13 @@ runtime from a JSON file (`DYNAMIC_CONFIG_FILE`).
 | `TLS_CLIENT_CERT` | Client certificate: a filesystem path, or PEM in the env var value itself | empty | |
 | `TLS_CLIENT_KEY` | Client key: a filesystem path, or PEM in the env var value itself | empty | |
 | `TLS_INSECURE_SKIP_VERIFY` | Skip broker TLS verify (not for production) | `false` | |
-| `SASL_MECHANISM` | `PLAIN`, `SCRAM-SHA-256`, or `SCRAM-SHA-512` | empty | |
-| `SASL_USER` | SASL username | empty | |
-| `SASL_PASSWORD` | SASL password | empty | |
+| `SASL_MECHANISM` | `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, or `OAUTHBEARER` | empty | |
+| `SASL_USER` | SASL username (`PLAIN` / `SCRAM-*`) | empty | |
+| `SASL_PASSWORD` | SASL password (`PLAIN` / `SCRAM-*`) | empty | |
+| `SASL_OAUTH_TOKEN_URL` | OAuth 2.0 token endpoint. Required for `OAUTHBEARER` | empty | |
+| `SASL_OAUTH_CLIENT_ID` | OAuth 2.0 client id. Required for `OAUTHBEARER` | empty | |
+| `SASL_OAUTH_CLIENT_SECRET` | OAuth 2.0 client secret. Required for `OAUTHBEARER` | empty | |
+| `SASL_OAUTH_SCOPE` | Optional space-separated OAuth scopes | empty | |
 | `CONNECTION_CHECK_INTERVAL_MS` | Broker connection probe interval (ms) | `120000` | |
 | `CONNECTION_CHECK_LATENCY_BUCKETS` | Histogram buckets for connection latency (ms) | `100,200,400,800,1600` | |
 | `STATUS_CHECK_INTERVAL_MS` | How often `/status` samples are updated (ms) | `30000` | |
@@ -99,6 +103,8 @@ runtime from a JSON file (`DYNAMIC_CONFIG_FILE`).
 | `TRACING_ENABLED` | Send traces over OTLP (`true`/`false`) | `false` | |
 | `MESSAGE_SIZE` | Size of the message **value** in **KB** (1 = 1024 bytes). `0` = short JSON (`producerId`, `messageId`, `timestamp`). Minimum positive value is `1` (value is then exactly 1024 bytes). Invalid values (negative, `0.01`, non-integer) log a warning and behave as `0`. A `payload` field of random alphanum fills up to that length. Must fit the broker `message.max.bytes` (often 1MiB) | `0` | |
 | `PROMETHEUS_CONSTANT_LABELS` | Extra labels on all metrics, `key=value` pairs separated by `;` | empty | |
+
+`OAUTHBEARER` uses the OAuth 2.0 client credentials grant against `SASL_OAUTH_TOKEN_URL`.
 
 When tracing is on, the OpenTelemetry SDK sends OTLP to `localhost:4317` unless you set `OTEL_EXPORTER_OTLP_ENDPOINT` (that variable is the SDK's, not canary's).
 
