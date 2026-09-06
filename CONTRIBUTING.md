@@ -10,7 +10,7 @@ changes under Apache-2.0.
 ## Making a change
 
 - **Branch from `main`.** Pull requests target `main`.
-- **Go 1.22.2.** Set `GOTOOLCHAIN=local` (the Makefile does this) so module
+- **Go 1.26.8.** Set `GOTOOLCHAIN=local` (the Makefile does this) so module
   commands do not upgrade the toolchain.
 - **Tests come with the change.** Unit: `make test`. End-to-end needs Docker
   Compose v2: `make test_e2e` (starts a KRaft broker from

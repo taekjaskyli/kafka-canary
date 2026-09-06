@@ -6,7 +6,7 @@ Started by the Strimzi team as
 [strimzi-canary](https://github.com/strimzi/strimzi-canary).
 Upstream is archived; this repo continues that work.
 
-![Go](https://img.shields.io/badge/Go-1.22.2-00ADD8?style=flat-square&logo=go&logoColor=white)
+![Go](https://img.shields.io/badge/Go-1.26.8-00ADD8?style=flat-square&logo=go&logoColor=white)
 ![Kafka](https://img.shields.io/badge/Apache_Kafka-client-231F20?style=flat-square&logo=apachekafka&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)
 [![GitHub release](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Frepos%2Ftaekjaskyli%2Fkafka-canary%2Freleases%2Flatest&query=%24.tag_name&label=release&style=flat-square&color=blue)](https://github.com/taekjaskyli/kafka-canary/releases/latest)
@@ -96,8 +96,10 @@ runtime from a JSON file (`DYNAMIC_CONFIG_FILE`).
 | `STATUS_TIME_WINDOW_MS` | Sliding window for consume success percentage (ms) | `300000` | |
 | `DYNAMIC_CONFIG_FILE` | Optional JSON file watched for runtime overrides | empty | |
 | `DYNAMIC_CONFIG_WATCHER_INTERVAL` | Config file poll interval (ms) | `30000` | |
-| `EXPORTER_TYPE_TRACING` | Tracing exporter: empty (off), `jaeger`, or `otlp` | empty | |
+| `TRACING_ENABLED` | Send traces over OTLP (`true`/`false`) | `false` | |
 | `PROMETHEUS_CONSTANT_LABELS` | Extra labels on all metrics, `key=value` pairs separated by `;` | empty | |
+
+When tracing is on, the OpenTelemetry SDK sends OTLP to `localhost:4317` unless you set `OTEL_EXPORTER_OTLP_ENDPOINT` (that variable is the SDK's, not canary's).
 
 Runtime JSON example:
 
@@ -180,7 +182,7 @@ To keep the old topic and group, set `TOPIC`, `CLIENT_ID`, and `CONSUMER_GROUP_I
 
 ## Build and contributing
 
-Go **1.22.2**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
+Go **1.26.8**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 

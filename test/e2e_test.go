@@ -229,3 +229,18 @@ func TestMetricServerCanaryContent(t *testing.T) {
 		t.Errorf("Data are not updated within requested time period on endpoint %s", metricsEndpoint)
 	}
 }
+
+func TestOTLPTracesExported(t *testing.T) {
+	waitUntilReady(t)
+	wantSend := serviceManager.TopicTestName + " send"
+	wantReceive := serviceManager.TopicTestName + " receive"
+	deadline := time.Now().Add(20 * time.Second)
+	for time.Now().Before(deadline) {
+		if otlpCollector.HasSpan(wantSend) && otlpCollector.HasSpan(wantReceive) {
+			return
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+	t.Fatalf("OTLP collector missing Kafka spans (want %q and %q); got %v",
+		wantSend, wantReceive, otlpCollector.SpanNames())
+}

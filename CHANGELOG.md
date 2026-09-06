@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## Unreleased
+
+Notes for the next tag. Rewrite this heading to `## 0.9.0` (or whatever the version is) before tagging.
+
+### Changed
+
+* Go 1.22.2 → 1.26.8
+* IBM Sarama 1.41.3 → 1.60.2
+* Prometheus client 1.14.0 → 1.24.1
+* OpenTelemetry 1.13.0 → 1.46.0. Tracing is `TRACING_ENABLED` (OTLP only); `EXPORTER_TYPE_TRACING` is gone
+
 ## 0.8.0
 
 First release of **kafka-canary**, a community-maintained fork of the archived Strimzi Canary.

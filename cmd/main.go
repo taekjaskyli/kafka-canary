@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -44,41 +43,27 @@ var (
 )
 var saramaLogger = log.New(io.Discard, "[Sarama] ", log.Ldate|log.Lmicroseconds)
 
-func initTracerProvider(exporterType string) *sdktrace.TracerProvider {
-	if exporterType == "" {
+func initTracerProvider(enabled bool) *sdktrace.TracerProvider {
+	if !enabled {
 		tp := trace.NewNoopTracerProvider()
 		otel.SetTracerProvider(tp)
 		return nil
 	}
 	resources, _ := resource.New(context.Background(),
-		resource.WithFromEnv(), // pull attributes from OTEL_RESOURCE_ATTRIBUTES and OTEL_SERVICE_NAME environment variables
-		resource.WithProcess(), // This option configures a set of Detectors that discover process information
+		resource.WithFromEnv(), // OTEL_RESOURCE_ATTRIBUTES, OTEL_SERVICE_NAME
+		resource.WithProcess(),
 	)
 
-	exporter := exporterTracing(exporterType)
+	exporter, err := otlptracegrpc.New(context.Background())
+	if err != nil {
+		panic(fmt.Errorf("error creating OTLP tracing exporter: %s", err))
+	}
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithResource(resources),
 		sdktrace.WithBatcher(exporter),
 	)
 	otel.SetTracerProvider(tp)
 	return tp
-
-}
-
-func exporterTracing(exporterType string) sdktrace.SpanExporter {
-	//Could not use OTEL_TRACES_EXPORTER https://github.com/open-telemetry/opentelemetry-go/issues/2310
-	var exporter sdktrace.SpanExporter
-	var err error
-	//If the env variables needed are defined we set the exporter to Jaeger else it is an opentelemetry exporter
-	if exporterType == "jaeger" {
-		exporter, err = jaeger.New(jaeger.WithAgentEndpoint()) //from env variable https://github.com/open-telemetry/opentelemetry-go/tree/main/exporters/jaeger#environment-variables
-	} else if exporterType == "otlp" {
-		exporter, err = otlptracegrpc.New(context.Background()) //from env variable https://github.com/open-telemetry/opentelemetry-go/blob/main/exporters/otlp/otlptrace/README.md
-	}
-	if err != nil {
-		panic(fmt.Errorf("error creating tracing exporter %s", err))
-	}
-	return exporter
 }
 
 func main() {
@@ -96,7 +81,7 @@ func main() {
 
 	glog.Infof("Starting Kafka canary [%s] with config: %+v", version, canaryConfig)
 
-	tp := initTracerProvider(canaryConfig.ExporterTypeTracing)
+	tp := initTracerProvider(canaryConfig.TracingEnabled)
 	defer func() {
 		if tp != nil {
 			if err := tp.Shutdown(context.Background()); err != nil {

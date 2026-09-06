@@ -9,7 +9,7 @@ all: go_build docker_build
 
 .PHONY: test
 test:
-	GOTOOLCHAIN=local go test ./internal/... -tags=unit_test
+	GOTOOLCHAIN=local go test ./internal/... ./cmd/... -tags=unit_test
 
 .PHONY: test_e2e
 test_e2e:
