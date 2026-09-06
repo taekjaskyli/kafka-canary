@@ -1,4 +1,4 @@
-# Image. Empty tag uses Chart.appVersion (0.8.0).
+# Image. Empty tag uses Chart.appVersion (0.9.0).
 image:
   repository: ghcr.io/taekjaskyli/kafka-canary
   pullPolicy: IfNotPresent

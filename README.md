@@ -30,7 +30,7 @@ OCI:
 
 ```shell
 helm install kafka-canary oci://ghcr.io/taekjaskyli/charts/kafka-canary \
-  --version 0.8.0 \
+  --version 0.9.0 \
   --set env.KAFKA_BOOTSTRAP_SERVERS=my-cluster-kafka-bootstrap:9092
 ```
 
@@ -40,7 +40,7 @@ Helm repository (`helm repo add`):
 helm repo add kafka-canary https://taekjaskyli.github.io/kafka-canary
 helm repo update
 helm install kafka-canary kafka-canary/kafka-canary \
-  --version 0.8.0 \
+  --version 0.9.0 \
   --set env.KAFKA_BOOTSTRAP_SERVERS=my-cluster-kafka-bootstrap:9092
 ```
 
@@ -58,7 +58,7 @@ Enable a Prometheus Operator `ServiceMonitor` with `--set serviceMonitor.enabled
 docker run --rm \
   -e KAFKA_BOOTSTRAP_SERVERS=kafka:9092 \
   -p 8080:8080 \
-  ghcr.io/taekjaskyli/kafka-canary:0.8.0
+  ghcr.io/taekjaskyli/kafka-canary:0.9.0
 ```
 
 ## Configuration
