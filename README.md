@@ -97,6 +97,7 @@ runtime from a JSON file (`DYNAMIC_CONFIG_FILE`).
 | `DYNAMIC_CONFIG_FILE` | Optional JSON file watched for runtime overrides | empty | |
 | `DYNAMIC_CONFIG_WATCHER_INTERVAL` | Config file poll interval (ms) | `30000` | |
 | `TRACING_ENABLED` | Send traces over OTLP (`true`/`false`) | `false` | |
+| `MESSAGE_SIZE` | Size of the message **value** in **KB** (1 = 1024 bytes). `0` = short JSON (`producerId`, `messageId`, `timestamp`). Minimum positive value is `1` (value is then exactly 1024 bytes). Invalid values (negative, `0.01`, non-integer) log a warning and behave as `0`. A `payload` field of random alphanum fills up to that length. Must fit the broker `message.max.bytes` (often 1MiB) | `0` | |
 | `PROMETHEUS_CONSTANT_LABELS` | Extra labels on all metrics, `key=value` pairs separated by `;` | empty | |
 
 When tracing is on, the OpenTelemetry SDK sends OTLP to `localhost:4317` unless you set `OTEL_EXPORTER_OTLP_ENDPOINT` (that variable is the SDK's, not canary's).

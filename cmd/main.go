@@ -67,16 +67,14 @@ func initTracerProvider(enabled bool) *sdktrace.TracerProvider {
 }
 
 func main() {
-
-	// get canary configuration
-	canaryConfig := config.NewCanaryConfig()
-
-	// Always log to stderr by default
+	// glog must be on stderr before any config parsing so warnings share the same stream.
 	if err := flag.Set("logtostderr", "true"); err != nil {
-		glog.Errorf("Error on setting logtostderr to true")
+		fmt.Fprintf(os.Stderr, "Error on setting logtostderr to true: %v\n", err)
 	}
+	flag.Parse()
 	sarama.Logger = saramaLogger
 
+	canaryConfig := config.NewCanaryConfig()
 	applyDynamicConfig(&canaryConfig.DynamicCanaryConfig)
 
 	glog.Infof("Starting Kafka canary [%s] with config: %+v", version, canaryConfig)
@@ -187,7 +185,9 @@ func newClientWithRetry(canaryConfig *config.CanaryConfig, config *sarama.Config
 func applyDynamicConfig(dynamicCanaryConfig *config.DynamicCanaryConfig) {
 	if dynamicCanaryConfig.VerbosityLogLevel != nil {
 		flag.Set("v", strconv.Itoa(*dynamicCanaryConfig.VerbosityLogLevel))
-		flag.Parse()
+		if !flag.Parsed() {
+			flag.Parse()
+		}
 	}
 
 	if dynamicCanaryConfig.SaramaLogEnabled != nil && *dynamicCanaryConfig.SaramaLogEnabled {

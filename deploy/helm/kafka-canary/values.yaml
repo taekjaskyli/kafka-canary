@@ -122,6 +122,7 @@ env:
   # DYNAMIC_CONFIG_FILE: /secrets/kafka-canary/dynamic.json
   # DYNAMIC_CONFIG_WATCHER_INTERVAL: 30000
   # TRACING_ENABLED: true
+  # MESSAGE_SIZE: 0   # KB; 0 = short JSON, min positive 1 (= 1024-byte value)
   # PROMETHEUS_CONSTANT_LABELS: "my-label-1=one;my-label-2=two"
 
 # Prometheus Operator. Leave both false to scrape via annotations or a static config.

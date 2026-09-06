@@ -29,6 +29,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 	os.Setenv(config.TracingEnabledEnvVar, "true")
+	os.Setenv(config.MessageSizeEnvVar, "1")
 	os.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", otlpCollector.HTTPEndpoint())
 	os.Setenv("OTEL_EXPORTER_OTLP_INSECURE", "true")
 	os.Setenv("OTEL_BSP_SCHEDULE_DELAY", "200")
