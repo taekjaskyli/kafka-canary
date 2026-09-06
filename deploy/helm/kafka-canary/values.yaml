@@ -115,6 +115,9 @@ env:
   # TLS_CLIENT_KEY: /secrets/kafka-canary/tls.key
   # TLS_INSECURE_SKIP_VERIFY: false
   # SASL_MECHANISM: SCRAM-SHA-512
+  # SASL_OAUTH_TOKEN_URL: https://idp.example.com/realms/kafka/protocol/openid-connect/token
+  # SASL_OAUTH_CLIENT_ID: kafka-canary
+  # SASL_OAUTH_SCOPE: profile
   # CONNECTION_CHECK_INTERVAL_MS: 120000
   # CONNECTION_CHECK_LATENCY_BUCKETS: "100,200,400,800,1600"
   # STATUS_CHECK_INTERVAL_MS: 30000

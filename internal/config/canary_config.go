@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -42,6 +41,10 @@ const (
 	SASLMechanismEnvVar                 = "SASL_MECHANISM"
 	SASLUserEnvVar                      = "SASL_USER"
 	SASLPasswordEnvVar                  = "SASL_PASSWORD"
+	SASLOAuthTokenURLEnvVar             = "SASL_OAUTH_TOKEN_URL"
+	SASLOAuthClientIDEnvVar             = "SASL_OAUTH_CLIENT_ID"
+	SASLOAuthClientSecretEnvVar         = "SASL_OAUTH_CLIENT_SECRET"
+	SASLOAuthScopeEnvVar                = "SASL_OAUTH_SCOPE"
 	ConnectionCheckIntervalEnvVar       = "CONNECTION_CHECK_INTERVAL_MS"
 	ConnectionCheckLatencyBucketsEnvVar = "CONNECTION_CHECK_LATENCY_BUCKETS"
 	StatusCheckIntervalEnvVar           = "STATUS_CHECK_INTERVAL_MS"
@@ -74,6 +77,10 @@ const (
 	SASLMechanismDefault                 = ""
 	SASLUserDefault                      = ""
 	SASLPasswordDefault                  = ""
+	SASLOAuthTokenURLDefault             = ""
+	SASLOAuthClientIDDefault             = ""
+	SASLOAuthClientSecretDefault         = ""
+	SASLOAuthScopeDefault                = ""
 	ConnectionCheckIntervalDefault       = 120000
 	ConnectionCheckLatencyBucketsDefault = "100,200,400,800,1600"
 	StatusCheckIntervalDefault           = 30000
@@ -114,6 +121,10 @@ type CanaryConfig struct {
 	SASLMechanism                 string
 	SASLUser                      string
 	SASLPassword                  string
+	SASLOAuthTokenURL             string
+	SASLOAuthClientID             string
+	SASLOAuthClientSecret         string
+	SASLOAuthScope                string
 	ConnectionCheckInterval       time.Duration
 	ConnectionCheckLatencyBuckets []float64
 	StatusCheckInterval           time.Duration
@@ -180,6 +191,10 @@ func NewCanaryConfig() *CanaryConfig {
 		SASLMechanism:                 lookupStringEnv(SASLMechanismEnvVar, SASLMechanismDefault),
 		SASLUser:                      lookupStringEnv(SASLUserEnvVar, SASLUserDefault),
 		SASLPassword:                  lookupStringEnv(SASLPasswordEnvVar, SASLPasswordDefault),
+		SASLOAuthTokenURL:             lookupStringEnv(SASLOAuthTokenURLEnvVar, SASLOAuthTokenURLDefault),
+		SASLOAuthClientID:             lookupStringEnv(SASLOAuthClientIDEnvVar, SASLOAuthClientIDDefault),
+		SASLOAuthClientSecret:         lookupStringEnv(SASLOAuthClientSecretEnvVar, SASLOAuthClientSecretDefault),
+		SASLOAuthScope:                lookupStringEnv(SASLOAuthScopeEnvVar, SASLOAuthScopeDefault),
 		ConnectionCheckInterval:       time.Duration(lookupIntEnv(ConnectionCheckIntervalEnvVar, ConnectionCheckIntervalDefault)),
 		ConnectionCheckLatencyBuckets: latencyBuckets(lookupStringEnv(ConnectionCheckLatencyBucketsEnvVar, ConnectionCheckLatencyBucketsDefault)),
 		StatusCheckInterval:           time.Duration(lookupIntEnv(StatusCheckIntervalEnvVar, StatusCheckIntervalDefault)),
@@ -285,27 +300,29 @@ func (c CanaryConfig) String() string {
 		TLSClientKey = "[Client key]"
 	}
 
-	// is one of SASL mechanisms needing user/password is enabled, using placeholders for them
 	SASLUser := ""
 	SASLPassword := ""
-	if c.SASLMechanism == sarama.SASLTypePlaintext {
-		if c.SASLUser != "" {
-			SASLUser = "[SASL user]"
-		}
-
-		if c.SASLPassword != "" {
-			SASLPassword = "[SASL password]"
-		}
+	if c.SASLUser != "" {
+		SASLUser = "[SASL user]"
+	}
+	if c.SASLPassword != "" {
+		SASLPassword = "[SASL password]"
+	}
+	SASLOAuthClientSecret := ""
+	if c.SASLOAuthClientSecret != "" {
+		SASLOAuthClientSecret = "[OAuth client secret]"
 	}
 
 	return fmt.Sprintf("{BootstrapServers:%s, BootstrapBackoffMaxAttempts:%d, BootstrapBackoffScale:%d, Topic:%s, TopicConfig:%v, ReconcileInterval:%d ms, "+
 		"ClientID:%s, ConsumerGroupID:%s, ProducerLatencyBuckets:%v, EndToEndLatencyBuckets:%v, ExpectedClusterSize:%d, KafkaVersion:%s,"+
 		"TLSEnabled:%t, TLSCACert:%s, TLSClientCert:%s, TLSClientKey:%s, TLSInsecureSkipVerify:%t,"+
-		"SASLMechanism:%s, SASLUser:%s, SASLPassword:%s, ConnectionCheckInterval:%d ms, ConnectionCheckLatencyBuckets:%v, StatusCheckInterval:%d ms, StatusTimeWindow:%d ms,"+
+		"SASLMechanism:%s, SASLUser:%s, SASLPassword:%s, SASLOAuthTokenURL:%s, SASLOAuthClientID:%s, SASLOAuthClientSecret:%s, SASLOAuthScope:%s, "+
+		"ConnectionCheckInterval:%d ms, ConnectionCheckLatencyBuckets:%v, StatusCheckInterval:%d ms, StatusTimeWindow:%d ms,"+
 		"DynamicConfigFile: %s, DynamicCanaryConfig: %s, DynamicConfigWatcherInterval: %d ms, TracingEnabled:%t, MessageSize:%d KB}",
 		c.BootstrapServers, c.BootstrapBackoffMaxAttempts, c.BootstrapBackoffScale, c.Topic, c.TopicConfig, c.ReconcileInterval, c.ClientID, c.ConsumerGroupID,
 		c.ProducerLatencyBuckets, c.EndToEndLatencyBuckets, c.ExpectedClusterSize, c.KafkaVersion,
 		c.TLSEnabled, TLSCACert, TLSClientCert, TLSClientKey, c.TLSInsecureSkipVerify, c.SASLMechanism, SASLUser, SASLPassword,
+		c.SASLOAuthTokenURL, c.SASLOAuthClientID, SASLOAuthClientSecret, c.SASLOAuthScope,
 		c.ConnectionCheckInterval, c.ConnectionCheckLatencyBuckets, c.StatusCheckInterval, c.StatusTimeWindow,
 		c.DynamicConfigFile, c.DynamicCanaryConfig, c.DynamicConfigWatcherInterval, c.TracingEnabled, c.MessageSize)
 }
