@@ -49,6 +49,7 @@ const (
 	DynamicConfigFileEnvVar             = "DYNAMIC_CONFIG_FILE"
 	DynamicConfigWatcherIntervalEnvVar  = "DYNAMIC_CONFIG_WATCHER_INTERVAL"
 	TracingEnabledEnvVar                = "TRACING_ENABLED"
+	MessageSizeEnvVar                   = "MESSAGE_SIZE"
 	PrometheusConsantLabelsEnvVar       = "PROMETHEUS_CONSTANT_LABELS"
 	// default values for environment variables
 	BootstrapServersDefault              = "localhost:9092"
@@ -80,6 +81,7 @@ const (
 	DynamicConfigFileDefault             = ""
 	DynamicConfigWatcherIntervalDefault  = 30000
 	TracingEnabledDefault                = false
+	MessageSizeDefault                   = 0
 	PrometheusConsantLabelsDefault       = ""
 )
 
@@ -118,6 +120,7 @@ type CanaryConfig struct {
 	StatusTimeWindow              time.Duration
 	DynamicConfigWatcherInterval  time.Duration
 	TracingEnabled                bool
+	MessageSize                   int
 	PrometheusConstantLabels      prometheus.Labels
 }
 
@@ -184,6 +187,7 @@ func NewCanaryConfig() *CanaryConfig {
 		DynamicConfigFile:             lookupStringEnv(DynamicConfigFileEnvVar, DynamicConfigFileDefault),
 		DynamicConfigWatcherInterval:  time.Duration(lookupIntEnv(DynamicConfigWatcherIntervalEnvVar, DynamicConfigWatcherIntervalDefault)),
 		TracingEnabled:                lookupBoolEnv(TracingEnabledEnvVar, TracingEnabledDefault),
+		MessageSize:                   messageSize(),
 		PrometheusConstantLabels:      convertKVPairsToPrometheusLabels(lookupStringEnv(PrometheusConsantLabelsEnvVar, PrometheusConsantLabelsDefault)),
 	}
 	return &config
@@ -298,10 +302,35 @@ func (c CanaryConfig) String() string {
 		"ClientID:%s, ConsumerGroupID:%s, ProducerLatencyBuckets:%v, EndToEndLatencyBuckets:%v, ExpectedClusterSize:%d, KafkaVersion:%s,"+
 		"TLSEnabled:%t, TLSCACert:%s, TLSClientCert:%s, TLSClientKey:%s, TLSInsecureSkipVerify:%t,"+
 		"SASLMechanism:%s, SASLUser:%s, SASLPassword:%s, ConnectionCheckInterval:%d ms, ConnectionCheckLatencyBuckets:%v, StatusCheckInterval:%d ms, StatusTimeWindow:%d ms,"+
-		"DynamicConfigFile: %s, DynamicCanaryConfig: %s, DynamicConfigWatcherInterval: %d ms, TracingEnabled:%t}",
+		"DynamicConfigFile: %s, DynamicCanaryConfig: %s, DynamicConfigWatcherInterval: %d ms, TracingEnabled:%t, MessageSize:%d KB}",
 		c.BootstrapServers, c.BootstrapBackoffMaxAttempts, c.BootstrapBackoffScale, c.Topic, c.TopicConfig, c.ReconcileInterval, c.ClientID, c.ConsumerGroupID,
 		c.ProducerLatencyBuckets, c.EndToEndLatencyBuckets, c.ExpectedClusterSize, c.KafkaVersion,
 		c.TLSEnabled, TLSCACert, TLSClientCert, TLSClientKey, c.TLSInsecureSkipVerify, c.SASLMechanism, SASLUser, SASLPassword,
 		c.ConnectionCheckInterval, c.ConnectionCheckLatencyBuckets, c.StatusCheckInterval, c.StatusTimeWindow,
-		c.DynamicConfigFile, c.DynamicCanaryConfig, c.DynamicConfigWatcherInterval, c.TracingEnabled)
+		c.DynamicConfigFile, c.DynamicCanaryConfig, c.DynamicConfigWatcherInterval, c.TracingEnabled, c.MessageSize)
+}
+
+func messageSize() int {
+	raw, ok := os.LookupEnv(MessageSizeEnvVar)
+	if !ok || raw == "" {
+		return MessageSizeDefault
+	}
+	n, err := strconv.Atoi(raw)
+	if err != nil {
+		glog.Warningf("%s=%q is not an integer KB; using 0 (short JSON)", MessageSizeEnvVar, raw)
+		return MessageSizeDefault
+	}
+	if n < 0 {
+		glog.Warningf("%s=%d is negative; using 0 (short JSON). Minimum positive value is 1 KB", MessageSizeEnvVar, n)
+		return MessageSizeDefault
+	}
+	return n
+}
+
+// MessageSizeBytes is the message value length. 0 leaves the short JSON.
+func (c CanaryConfig) MessageSizeBytes() int {
+	if c.MessageSize <= 0 {
+		return 0
+	}
+	return c.MessageSize * 1024
 }

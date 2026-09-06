@@ -105,11 +105,11 @@ func (ps *producerService) Send(partitionsAssignments map[int32][]int32) {
 	}
 	for i := 0; i < numPartitions; i++ {
 		// build the message JSON payload and send to the current partition
-		cm := ps.newCanaryMessage()
-		msg.Value = sarama.StringEncoder(cm.Json())
+		cm, payload := ps.newCanaryMessage()
+		msg.Value = sarama.StringEncoder(payload)
 		msg.Partition = int32(i)
 		otel.GetTextMapPropagator().Inject(context.Background(), otelsarama.NewProducerMessageCarrier(msg))
-		glog.V(1).Infof("Sending message: value=%s on partition=%d", msg.Value, msg.Partition)
+		glog.V(1).Infof("Sending message: bytes=%d partition=%d", len(payload), msg.Partition)
 		partition, offset, err := ps.producer.SendMessage(msg)
 		timestamp := util.NowInMilliseconds() // timestamp in milliseconds
 		labels := prometheus.Labels{
@@ -153,13 +153,17 @@ func (ps *producerService) Close() {
 	glog.Infof("Producer closed")
 }
 
-func (ps *producerService) newCanaryMessage() CanaryMessage {
+func (ps *producerService) newCanaryMessage() (CanaryMessage, string) {
 	ps.index++
-	timestamp := util.NowInMilliseconds() // timestamp in milliseconds
+	size := ps.canaryConfig.MessageSizeBytes()
+	var filler []byte
+	if size > 0 {
+		filler = randomAlphanum(size)
+	}
 	cm := CanaryMessage{
 		ProducerID: ps.canaryConfig.ClientID,
 		MessageID:  ps.index,
-		Timestamp:  timestamp,
+		Timestamp:  util.NowInMilliseconds(),
 	}
-	return cm
+	return cm, cm.jsonSizeWith(size, filler)
 }

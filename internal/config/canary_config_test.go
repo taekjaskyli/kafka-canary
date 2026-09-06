@@ -52,6 +52,34 @@ func TestConfigDefault(t *testing.T) {
 	prometheusConsantLabelsDefault := convertKVPairsToPrometheusLabels(PrometheusConsantLabelsDefault)
 	assertMapConfigParameter(c.PrometheusConstantLabels, prometheusConsantLabelsDefault, t)
 	assertBoolConfigParameter(c.TracingEnabled, TracingEnabledDefault, t)
+	assertIntConfigParameter(c.MessageSize, MessageSizeDefault, t)
+	assertIntConfigParameter(c.MessageSizeBytes(), 0, t)
+}
+
+func TestMessageSize(t *testing.T) {
+	t.Setenv(MessageSizeEnvVar, "196")
+	c := NewCanaryConfig()
+	assertIntConfigParameter(c.MessageSize, 196, t)
+	assertIntConfigParameter(c.MessageSizeBytes(), 196*1024, t)
+}
+
+func TestMessageSizeOneKB(t *testing.T) {
+	t.Setenv(MessageSizeEnvVar, "1")
+	c := NewCanaryConfig()
+	assertIntConfigParameter(c.MessageSize, 1, t)
+	assertIntConfigParameter(c.MessageSizeBytes(), 1024, t)
+}
+
+func TestMessageSizeNegativeTreatedAsZero(t *testing.T) {
+	t.Setenv(MessageSizeEnvVar, "-1")
+	c := NewCanaryConfig()
+	assertIntConfigParameter(c.MessageSize, 0, t)
+}
+
+func TestMessageSizeNotIntegerTreatedAsZero(t *testing.T) {
+	t.Setenv(MessageSizeEnvVar, "0.01")
+	c := NewCanaryConfig()
+	assertIntConfigParameter(c.MessageSize, 0, t)
 }
 
 func TestTracingEnabled(t *testing.T) {

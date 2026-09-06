@@ -4,6 +4,10 @@
 
 Notes for the next tag. Rewrite this heading to `## 0.9.0` (or whatever the version is) before tagging.
 
+### Added
+
+* `MESSAGE_SIZE` (KB). `0` keeps the short JSON; `1` and above set the message value to exactly N×1024 bytes (`payload` fills the rest). Minimum positive value is 1 KB; invalid values warn and use `0`
+
 ### Changed
 
 * Go 1.22.2 → 1.26.8
