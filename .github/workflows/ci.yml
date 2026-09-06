@@ -34,6 +34,26 @@ jobs:
           GOTOOLCHAIN: local
         run: go build -o /tmp/kafka-canary ./cmd/
 
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.22.2"
+          cache: true
+
+      - name: Pull Kafka image
+        run: docker pull quay.io/strimzi/kafka:1.2.0-kafka-4.3.1
+
+      - name: E2E
+        env:
+          GOTOOLCHAIN: local
+        run: go test ./test/... -tags=e2e -count=1 -timeout 12m -v
+
   helm:
     name: Helm lint
     runs-on: ubuntu-latest
