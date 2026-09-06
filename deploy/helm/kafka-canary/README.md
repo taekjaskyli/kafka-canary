@@ -204,6 +204,15 @@ With Prometheus Operator:
 `podMonitor.enabled` is also available. Leave both false if you scrape via
 annotations or a static Prometheus config.
 
+Optional `PrometheusRule` (produce/consume failures and broker unreachable),
+off by default. Same idea as ServiceMonitor: enable it, and set `labels`
+if your Prometheus Operator instance selects rules by label.
+
+```yaml
+prometheusRule:
+  enabled: true
+```
+
 Grafana dashboard JSON: [`deploy/examples/metrics/grafana-dashboards/kafka-canary.json`](../../examples/metrics/grafana-dashboards/kafka-canary.json).
 
 ## Upgrade
