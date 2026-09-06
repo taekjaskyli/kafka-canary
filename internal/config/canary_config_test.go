@@ -58,6 +58,16 @@ func TestConfigDefault(t *testing.T) {
 	assertBoolConfigParameter(c.TracingEnabled, TracingEnabledDefault, t)
 	assertIntConfigParameter(c.MessageSize, MessageSizeDefault, t)
 	assertIntConfigParameter(c.MessageSizeBytes(), 0, t)
+	assertIntConfigParameter(c.SaramaProducerRetryMax, SaramaProducerRetryMaxDefault, t)
+	assertIntConfigParameter(c.SaramaProducerRetryBackoffMs, SaramaUnsetMsDefault, t)
+	assertIntConfigParameter(c.SaramaNetDialTimeoutMs, SaramaUnsetMsDefault, t)
+	assertIntConfigParameter(c.SaramaNetReadTimeoutMs, SaramaUnsetMsDefault, t)
+	assertIntConfigParameter(c.SaramaNetWriteTimeoutMs, SaramaUnsetMsDefault, t)
+	assertIntConfigParameter(c.SaramaNetKeepAliveMs, SaramaUnsetMsDefault, t)
+	assertIntConfigParameter(c.SaramaConsumerSessionTimeoutMs, SaramaUnsetMsDefault, t)
+	assertIntConfigParameter(c.SaramaConsumerHeartbeatIntervalMs, SaramaUnsetMsDefault, t)
+	assertIntConfigParameter(c.SaramaMetadataRefreshFrequencyMs, SaramaUnsetMsDefault, t)
+	assertIntConfigParameter(c.SaramaAdminTimeoutMs, SaramaUnsetMsDefault, t)
 }
 
 func TestMessageSize(t *testing.T) {
