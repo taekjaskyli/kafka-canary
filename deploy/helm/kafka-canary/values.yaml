@@ -149,3 +149,38 @@ podMonitor:
   labels: {}
   namespace: ""
   annotations: {}
+
+# Prometheus Operator alerting. Off by default (same as ServiceMonitor).
+# Put selector labels under `labels` if the Prometheus instance requires them.
+prometheusRule:
+  enabled: false
+  labels: {}
+  namespace: ""
+  annotations: {}
+  groups:
+    - name: kafka-canary
+      rules:
+        - alert: KafkaCanaryProduceFailed
+          expr: increase(kafka_canary_records_produced_failed_total[5m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Kafka canary produce failed
+            description: The canary could not produce to Kafka for 5m.
+        - alert: KafkaCanaryConsumeFailed
+          expr: increase(kafka_canary_consumer_error_total[5m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Kafka canary consume failed
+            description: The canary consumer reported errors for 5m.
+        - alert: KafkaCanaryBrokerUnreachable
+          expr: 'increase(kafka_canary_connection_total{connected="false"}[5m]) > 0'
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Kafka canary cannot reach a broker
+            description: Connection probes failed for 5m (kafka_canary_connection_total).

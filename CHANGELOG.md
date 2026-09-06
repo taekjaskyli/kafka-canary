@@ -10,6 +10,7 @@ Notes for the next tag. Rewrite this heading to `## 0.9.0` (or whatever the vers
 * SASL/`OAUTHBEARER` via OAuth 2.0 client credentials (`SASL_MECHANISM=OAUTHBEARER`, `SASL_OAUTH_TOKEN_URL`, `SASL_OAUTH_CLIENT_ID`, `SASL_OAUTH_CLIENT_SECRET`, optional `SASL_OAUTH_SCOPE`)
 * `SARAMA_PRODUCER_RETRY_MAX`, `SARAMA_NET_*_TIMEOUT_MS`, `SARAMA_CONSUMER_SESSION_TIMEOUT_MS`, and related env vars overlay Sarama timeouts and retries at startup (unset keeps library defaults; produce retry default stays `0`)
 * `MANAGE_TOPIC` (default `true`). `false` is for a pre-created topic: no create, alter config, or reassignment; missing topic is fatal
+* Helm `PrometheusRule` (off by default) for produce, consume, and broker connection failures
 
 ### Changed
 
