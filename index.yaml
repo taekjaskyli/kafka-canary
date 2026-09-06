@@ -1,0 +1,27 @@
+apiVersion: v1
+entries:
+  kafka-canary:
+  - annotations:
+      artifacthub.io/license: Apache-2.0
+    apiVersion: v2
+    appVersion: 0.8.0
+    created: "2026-09-06T00:54:41.868180206Z"
+    description: A Kafka availability and health canary
+    digest: 951153d439acc208ba03ae7201eac7a9ff8041fb8daa15c8b3035c6191927c8a
+    home: https://github.com/taekjaskyli/kafka-canary
+    keywords:
+    - kafka
+    - canary
+    - observability
+    - prometheus
+    maintainers:
+    - name: taekjaskyli
+      url: https://github.com/taekjaskyli
+    name: kafka-canary
+    sources:
+    - https://github.com/taekjaskyli/kafka-canary
+    type: application
+    urls:
+    - https://taekjaskyli.github.io/kafka-canary/kafka-canary-0.8.0.tgz
+    version: 0.8.0
+generated: "2026-09-06T00:54:41.867536261Z"
