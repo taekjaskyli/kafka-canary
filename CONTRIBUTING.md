@@ -39,7 +39,7 @@ image to GHCR, Helm chart to OCI and `gh-pages`.
 
 1. Update `CHANGELOG.md` (that section becomes the GitHub Release notes) and Helm `Chart.yaml` (`version` / `appVersion`).
 2. Merge to `main`.
-3. `git tag 0.8.0 && git push origin 0.8.0`
+3. `git tag 0.9.0 && git push origin 0.9.0`
 
 One-time GitHub setting after the first release: **Settings → Pages → Source:
 Deploy from a branch → `gh-pages` / `/`**.

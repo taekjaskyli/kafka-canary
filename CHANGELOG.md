@@ -1,8 +1,6 @@
 # CHANGELOG
 
-## Unreleased
-
-Notes for the next tag. Rewrite this heading to `## 0.9.0` (or whatever the version is) before tagging.
+## 0.9.0
 
 ### Added
 

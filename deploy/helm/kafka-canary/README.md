@@ -22,7 +22,7 @@ rebalance and make latency metrics noisy.
 
 ```bash
 helm install kafka-canary oci://ghcr.io/taekjaskyli/charts/kafka-canary \
-  --version 0.8.0 \
+  --version 0.9.0 \
   --set env.KAFKA_BOOTSTRAP_SERVERS=my-cluster-kafka-bootstrap:9092 \
   --namespace kafka-canary \
   --create-namespace
@@ -38,7 +38,7 @@ Classic `helm repo add` (GitHub Pages, updated on each release):
 helm repo add kafka-canary https://taekjaskyli.github.io/kafka-canary
 helm repo update
 helm install kafka-canary kafka-canary/kafka-canary \
-  --version 0.8.0 \
+  --version 0.9.0 \
   --set env.KAFKA_BOOTSTRAP_SERVERS=my-cluster-kafka-bootstrap:9092 \
   --namespace kafka-canary \
   --create-namespace
@@ -219,7 +219,7 @@ Grafana dashboard JSON: [`deploy/examples/metrics/grafana-dashboards/kafka-canar
 
 ```bash
 helm upgrade kafka-canary oci://ghcr.io/taekjaskyli/charts/kafka-canary \
-  --version 0.8.0 \
+  --version 0.9.0 \
   --namespace kafka-canary \
   -f my-values.yaml
 ```
@@ -229,7 +229,7 @@ Or, with the Helm repository:
 ```bash
 helm repo update
 helm upgrade kafka-canary kafka-canary/kafka-canary \
-  --version 0.8.0 \
+  --version 0.9.0 \
   --namespace kafka-canary \
   -f my-values.yaml
 ```
