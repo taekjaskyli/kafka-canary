@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="docs/images/logo.png" alt="Kafka Canary" width="240">
-</p>
+<img src="docs/images/logo.png" alt="Kafka Canary" width="240">
 
 # Kafka Canary
 
