@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/logo.png" alt="Kafka Canary" width="160">
+</p>
+
 # Kafka Canary
 
 A Kafka availability and health canary.
