@@ -5,6 +5,7 @@ type: application
 version: 0.9.0
 appVersion: "0.9.0"
 home: https://github.com/taekjaskyli/kafka-canary
+icon: https://raw.githubusercontent.com/taekjaskyli/kafka-canary/main/docs/images/logo.png
 sources:
   - https://github.com/taekjaskyli/kafka-canary
 keywords:
